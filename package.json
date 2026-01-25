@@ -1,0 +1,18 @@
+{
+  "name": "async-job-queue",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "bullmq": "^5.67.1",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.7.1",
+    "ioredis": "^5.9.2"
+  }
+}
