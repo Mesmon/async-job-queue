@@ -1,9 +1,9 @@
-import fastify from "fastify";
-import { loggerOptions } from "../utils/logger.js";
-import imageRouter from "../routes/image-routes.js";
+import fastify from 'fastify';
+import imageRouter from '../routes/image-routes.js';
+import { loggerOptions } from '../utils/logger.js';
 
 const app = fastify({
-	logger: loggerOptions,
+  logger: loggerOptions,
 });
 
 app.register(imageRouter);
