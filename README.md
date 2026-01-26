@@ -1,16 +1,25 @@
 # Async job Queue
+
 This project demonstrates micro-service architecture with an asynchronous job queue using Bun, Fastify, and BullMQ.
 
 ## Features
+
 - Fastify server for handling HTTP requests.
 - BullMQ for managing job queues.
 - Modular structure with separate routes and utilities.
 
 ## Getting Started
+
 To install dependencies:
 
 ```bash
 bun install
+```
+
+Create a `.env` file in the root directory. You can use the provided `.env.example` as a template.
+
+```bash
+cp .env.example .env
 ```
 
 To run:
