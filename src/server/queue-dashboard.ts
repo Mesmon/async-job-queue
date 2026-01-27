@@ -1,10 +1,9 @@
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
-import type { FastifyInstance } from 'fastify';
 import { jobQueue } from '../queue';
 
-export const setupDashboard = (app: FastifyInstance) => {
+export const getServerAdapter = () => {
   const serverAdapter = new FastifyAdapter();
 
   serverAdapter.setBasePath('/ui');
@@ -14,7 +13,5 @@ export const setupDashboard = (app: FastifyInstance) => {
     serverAdapter,
   });
 
-  app.register(serverAdapter.registerPlugin(), {
-    prefix: '/ui',
-  });
+  return serverAdapter;
 };

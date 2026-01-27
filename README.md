@@ -1,34 +1,22 @@
-# Async job Queue
+# Distributed Image Processing Service
 
-This project demonstrates micro-service architecture with an asynchronous job queue using Bun, Fastify, and BullMQ.
+A scalable, asynchronous microservice for image processing, designed with **Fastify**, **BullMQ**, and **Redis**.
 
-## Features
+## 🏗 Architecture
+- **API Service**: Fastify server handling HTTP requests and schema validation.
+- **Message Broker**: Redis-backed BullMQ for robust job management.
+- **Worker Service**: Scalable worker nodes performing CPU-intensive image resizing (using `sharp`).
+- **Observability**: Integrated Bull Board for real-time queue monitoring.
 
-- Fastify server for handling HTTP requests.
-- BullMQ for managing job queues.
-- Modular structure with separate routes and utilities.
+## 🚀 Features
+- **Asynchronous Processing**: Offloads heavy computation to background workers.
+- **Reliability**: Automatic retries and exponential backoff for failed jobs.
+- **Scalability**: Dockerized services allow independent scaling of Workers vs API.
+- **Safety**: comprehensive Type-Safety with TypeScript and Zod schema validation.
 
-## Getting Started
+## 🛠 Usage
 
-To install dependencies:
-
+### 1. Start System (Docker)
+Spins up Redis, API, and 2 Worker replicas.
 ```bash
-bun install
-```
-
-Create a `.env` file in the root directory. You can use the provided `.env.example` as a template.
-
-```bash
-cp .env.example .env
-```
-
-To run:
-
-```bash
-bun run start
-```
-
-This project was created using `bun init` in bun v1.3.6. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
-
-> [!NOTE]
-> GenAI tools were used to help create this project and documentation.
+docker-compose up --build
