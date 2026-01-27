@@ -1,28 +1,16 @@
 import type { FastifyInstance } from 'fastify';
 import { processImageHandler } from '../controllers/image-controller';
-import { processImageSchema } from '../schemas/process-image-schema';
+import { processImageRequestSchemas } from '../schemas/process-image-request';
 
 const processImage = async (fastify: FastifyInstance) => {
   fastify.post(
     '/process-image',
     {
       schema: {
-        body: processImageSchema,
+        body: processImageRequestSchemas.body,
         response: {
-          202: {
-            type: 'object',
-            properties: {
-              status: { type: 'string' },
-              jobId: { type: 'string' },
-              info: { type: 'string' },
-            },
-          },
-          400: {
-            type: 'object',
-            properties: {
-              error: { type: 'string' },
-            },
-          },
+          202: processImageRequestSchemas[202],
+          400: processImageRequestSchemas[400],
         },
         tags: ['Images'],
       },
