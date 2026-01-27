@@ -3,7 +3,7 @@ import { config } from '../config.js';
 
 const level = config.logLevel || 'info';
 
-export const loggerOptions = {
+const loggerOptions = {
   level,
   transport: {
     targets: [
