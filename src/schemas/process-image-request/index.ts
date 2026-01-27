@@ -7,3 +7,11 @@ export const processImageRequestSchemas = {
   202: successResponseSchema,
   400: errorResponseSchema,
 };
+export const processImageRouteSchema = {
+  body: processImageRequestSchemas.body,
+  response: {
+    202: processImageRequestSchemas[202],
+    400: processImageRequestSchemas[400],
+  },
+  tags: ['Images'],
+};

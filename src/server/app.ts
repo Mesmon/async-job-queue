@@ -6,12 +6,15 @@ import {
 } from 'fastify-type-provider-zod';
 import imageRouter from '../routes/image-routes.js';
 import { loggerOptions } from '../utils/logger.js';
+import { setupDashboard } from './queue-dashboard.js';
 
 const app = fastify({ logger: loggerOptions })
   .setValidatorCompiler(validatorCompiler)
   .setSerializerCompiler(serializerCompiler)
   .withTypeProvider<ZodTypeProvider>();
 
-await app.register(imageRouter);
+app.register(imageRouter);
+
+setupDashboard(app);
 
 export default app;
