@@ -18,7 +18,7 @@ export const processImageHandler = async (request: ProcessImageRequest, reply: F
   const job = await jobQueue.add('process-image', jobData, {
     attempts: 3,
     backoff: { type: 'exponential', delay: 1000 },
-    removeOnComplete: true,
+    removeOnComplete: { age: 3600 },
   });
 
   return reply.status(202).send({
