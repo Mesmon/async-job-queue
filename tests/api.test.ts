@@ -2,9 +2,9 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import app from '../src/server/app';
 
 // mock the queue
-vi.mock('../src/queue', () => ({
+vi.mock('../src/server/queue', () => ({
   jobQueue: {
-    add: vi.fn().mockResolvedValue({ id: 'mock-job-123' }), // Simulate success
+    add: vi.fn().mockResolvedValue({ id: 'mock-job-123',  }), // Simulate success
   },
 }));
 

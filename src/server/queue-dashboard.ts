@@ -1,7 +1,7 @@
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
-import { jobQueue } from '../queue';
+import { jobQueue } from './queue';
 
 export const getServerAdapter = () => {
   const serverAdapter = new FastifyAdapter();

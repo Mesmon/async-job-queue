@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { jobQueue } from '../queue';
+import { jobQueue } from '../server/queue';
 import type { ProcessImageRequestBody } from '../types/process-image-request-body';
 
 type ProcessImageRequest = FastifyRequest<{

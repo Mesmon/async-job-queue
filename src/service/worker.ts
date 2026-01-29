@@ -2,8 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Worker } from 'bullmq';
 import sharp from 'sharp';
-import { QUEUE_NAME, redisConnection } from './queue';
-import { logger } from './utils/logger';
+import { QUEUE_NAME, redisConnection } from '../server/queue';
+import { logger } from '../utils/logger';
 
 logger.info('Worker started... listening for jobs.');
 
