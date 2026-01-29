@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../config/config.js';
 import { jobQueue, redisConnection } from '../queue.js';
 import { logger } from '../utils/logger.js';
 import app from './app.js';

@@ -1,4 +1,4 @@
-import type { Config } from './types/config';
+import type { Config } from '../types/config';
 
 export const config: Config = {
   port: Number(process.env.PORT) || 3000,
