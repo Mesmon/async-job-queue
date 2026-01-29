@@ -3,20 +3,15 @@ import { config } from '../config.js';
 
 const level = config.logLevel || 'info';
 
-const loggerOptions = {
+export const loggerOptions = {
   level,
   transport: {
-    targets: [
-      {
-        target: 'pino/file',
-        options: { destination: './app.log', mkdir: true },
-      },
-      {
-        target: 'pino-pretty',
-        level,
-        options: { colorize: true, translateTime: 'SYS:standard' },
-      },
-    ],
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
+    },
   },
 };
 

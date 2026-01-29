@@ -28,5 +28,7 @@ COPY --from=prerelease /usr/src/app/tsconfig.json .
 # Create output folder for the worker
 RUN mkdir -p out
 
+EXPOSE 3000
+
 # Default command to run the server (can be overridden in docker run for worker)
 CMD ["bun", "run", "src/index.ts"]

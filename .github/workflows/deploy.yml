@@ -55,7 +55,7 @@ jobs:
           environmentVariables: |
             QUEUE_NAME=job-queue
             REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=6379
+            REDIS_PORT=6380
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             HF_TOKEN=${{ secrets.HF_TOKEN }}
             LOG_LEVEL=info

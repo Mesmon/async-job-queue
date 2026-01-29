@@ -3,5 +3,6 @@ export type Config = {
   logLevel: string;
   redisHost: string;
   redisPort: number;
+  redisPassword?: string;
   queueName: string;
 };

@@ -5,5 +5,6 @@ export const config: Config = {
   logLevel: process.env.LOG_LEVEL || 'info',
   redisHost: process.env.REDIS_HOST || 'localhost',
   redisPort: Number(process.env.REDIS_PORT) || 6379,
+  redisPassword: process.env.REDIS_PASSWORD || undefined,
   queueName: process.env.QUEUE_NAME || 'job-queue',
 };
