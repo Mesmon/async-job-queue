@@ -21,11 +21,11 @@ export const startServer = async () => {
 const registerShutdownSignals = () => {
   const signals = ['SIGINT', 'SIGTERM'];
   for (const signal of signals) {
-    process.once(signal, () => handleShutdown(signal));
+    process.once(signal, () => closeServer(signal));
   }
 };
 
-const handleShutdown = async (signal: string) => {
+export const closeServer = async (signal: string) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
 

@@ -4,7 +4,7 @@ import { closeServer } from './server';
 export const shutdown = async (): Promise<void> => {
   try {
     logger.info('Starting shutdown');
-    await closeServer();
+    await closeServer('SHUTDOWN');
     logger.info('Successfully finished shutdown');
     process.exit(1);
   } catch (error) {
