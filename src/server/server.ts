@@ -1,13 +1,22 @@
 import { config } from '../config/config.js';
-import { jobQueue, redisConnection } from './queue.js';
 import { logger } from '../utils/logger.js';
 import app from './app.js';
+import { jobQueue, redisConnection } from './queue.js';
 
 let isShuttingDown = false;
 
 export const startServer = async () => {
   try {
     registerShutdownSignals();
+    // DEBUG
+    logger.info(
+      {
+        redisHost: config.redisHost,
+        redisPort: config.redisPort,
+        redisPortType: typeof config.redisPort,
+      },
+      'Redis runtime config',
+    );
 
     const { port } = config;
     await app.listen({ host: '0.0.0.0', port });
