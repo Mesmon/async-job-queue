@@ -11,13 +11,14 @@ permissions:
 
 env:
   #Non-sensitive config
-  AZURE_RESOURCE_GROUP: "rg-mesmon-dev"
-  ACA_APP_NAME: "thumbnail-generator-service"
+  AZURE_RESOURCE_GROUP: "mesmon-rg-dev"
   ACA_ENV_NAME: "mesmon-cae-dev"
+  ACA_APP_NAME: "thumbnail-generator-service"
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: Dev
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +47,10 @@ jobs:
           containerAppEnvironment: ${{ env.ACA_ENV_NAME }}
           targetPort: 3000
           ingress: external
+
+          registryUrl: ${{ secrets.ACR_NAME }}.azurecr.io
+          registryUsername: ${{ secrets.ACR_NAME }}
+          registryPassword: ${{ secrets.ACR_PASSWORD }}
 
           environmentVariables: |
             QUEUE_NAME=job-queue
