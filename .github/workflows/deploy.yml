@@ -1,0 +1,56 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  id-token: write # Required for Azure Login
+  contents: read
+
+env:
+  #Non-sensitive config
+  AZURE_RESOURCE_GROUP: "rg-mesmon-dev"
+  ACA_APP_NAME: "thumbnail-generator-service"
+  ACA_ENV_NAME: "mesmon-cae-dev"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to ACR
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build and Push to ACR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.ACR_NAME }}.azurecr.io/thumbnail-generator-app:${{ github.sha }}
+          file: ./Dockerfile
+
+      - name: Deploy to Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          imageToDeploy: ${{ secrets.ACR_NAME }}.azurecr.io/thumbnail-generator-app:${{ github.sha }}
+          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
+          containerAppName: ${{ env.ACA_APP_NAME }}
+          containerAppEnvironment: ${{ env.ACA_ENV_NAME }}
+          targetPort: 3000
+          ingress: external
+
+          environmentVariables: |
+            QUEUE_NAME=job-queue
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=6379
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            HF_TOKEN=${{ secrets.HF_TOKEN }}
+            LOG_LEVEL=info
