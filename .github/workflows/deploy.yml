@@ -1,22 +1,34 @@
-name: Deploy to Azure
+name: Deploy Production
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
 
 permissions:
-  id-token: write # Required for Azure Login
+  id-token: write
   contents: read
 
 env:
-  #Non-sensitive config
   AZURE_RESOURCE_GROUP: "mesmon-rg-dev"
   ACA_ENV_NAME: "mesmon-cae-dev"
   ACA_APP_NAME: "thumbnail-generator-service"
 
 jobs:
+  test:
+    name: Safety Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun test
+
   build-and-deploy:
+    needs: [test]
     runs-on: ubuntu-latest
     environment: Dev
     steps:
@@ -30,6 +42,9 @@ jobs:
       - name: Log in to ACR
         run: az acr login --name ${{ secrets.ACR_NAME }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and Push to ACR
         uses: docker/build-push-action@v5
         with:
@@ -37,8 +52,10 @@ jobs:
           push: true
           tags: ${{ secrets.ACR_NAME }}.azurecr.io/thumbnail-generator-app:${{ github.sha }}
           file: ./Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Deploy to Container App
+      - name: Deploy Image to Container App
         uses: azure/container-apps-deploy-action@v1
         with:
           imageToDeploy: ${{ secrets.ACR_NAME }}.azurecr.io/thumbnail-generator-app:${{ github.sha }}
@@ -47,15 +64,7 @@ jobs:
           containerAppEnvironment: ${{ env.ACA_ENV_NAME }}
           targetPort: 3000
           ingress: external
-
+          
           registryUrl: ${{ secrets.ACR_NAME }}.azurecr.io
           registryUsername: ${{ secrets.ACR_NAME }}
           registryPassword: ${{ secrets.ACR_PASSWORD }}
-
-          environmentVariables: |
-            QUEUE_NAME=job-queue
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=6380
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-            HF_TOKEN=${{ secrets.HF_TOKEN }}
-            LOG_LEVEL=info

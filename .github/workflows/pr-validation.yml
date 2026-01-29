@@ -1,15 +1,13 @@
-name: CI
+name: PR Validation
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  test-and-lint:
+    name: Build & Test
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
