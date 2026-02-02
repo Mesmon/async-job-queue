@@ -8,6 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check .",
+    "format": "biome format --write .",
+    "format:check": "biome format --check .",
+    "check": "biome check --write .",
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
@@ -17,7 +20,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.8.3",
+    "@biomejs/biome": "2.3.13",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
