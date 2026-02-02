@@ -1,18 +1,20 @@
 {
   "name": "async-job-queue",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "prettier": "^3.7.4",
+    "turbo": "^2.8.1",
+    "typescript": "5.9.2"
   },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "bullmq": "^5.67.1",
-    "dotenv": "^17.2.3",
-    "fastify": "^5.7.1",
-    "ioredis": "^5.9.2"
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
   }
 }
