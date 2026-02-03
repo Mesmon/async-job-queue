@@ -13,7 +13,7 @@ export class UploadService {
     const connectionString = this.config.getOrThrow<string>("AZURE_STORAGE_CONNECTION_STRING");
     this.containerName = this.config.getOrThrow<string>("AZURE_CONTAINER_NAME");
 
-    this.blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+    this.blobServiceClient = BlobServiceClient.fromConnectionString(connectionString, {});
   }
 
   async generateSasToken(filename: string) {
