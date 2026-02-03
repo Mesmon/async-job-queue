@@ -31,6 +31,11 @@ services:
       azurite
       --skipApiVersionCheck
       --loose
+      --blobHost 0.0.0.0
+      --queueHost 0.0.0.0
+      --tableHost 0.0.0.0
+      --location /data
+      --debug /data/debug.log
 
 volumes:
   postgres_data:
