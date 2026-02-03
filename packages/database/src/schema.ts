@@ -1,4 +1,4 @@
-import { JobStatus } from "@repo/shared/job";
+import { JobStatus } from "@repo/shared/schemas";
 import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // (Note: Drizzle needs to know about the enum in the DB layer too)

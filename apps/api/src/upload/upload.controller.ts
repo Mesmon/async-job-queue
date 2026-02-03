@@ -1,5 +1,5 @@
 import { Body, Controller, Inject, Post } from "@nestjs/common";
-import { type CreateJobRequest, createJobRequestSchema } from "@repo/shared/job";
+import { type CreateJobRequest, uploadFileRequestSchema } from "@repo/shared/schemas";
 import { UploadService } from "./upload.service.js";
 
 @Controller("upload")
@@ -8,7 +8,7 @@ export class UploadController {
 
   @Post("token")
   async getToken(@Body() body: CreateJobRequest) {
-    const { prompt, inputImagePath } = createJobRequestSchema.parse(body);
-    return this.uploadService.generateSasToken(inputImagePath);
+    const { filename } = uploadFileRequestSchema.parse(body);
+    return this.uploadService.generateSasToken(filename);
   }
 }

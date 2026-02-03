@@ -2,6 +2,7 @@ import { BlobSASPermissions, BlobServiceClient } from "@azure/storage-blob";
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { addMinutes } from "date-fns";
+import { generateBlobName } from "../helpers/blob-helper.js";
 
 @Injectable()
 export class UploadService {
@@ -29,7 +30,7 @@ export class UploadService {
     // 3. Generate SAS
     // Note: In local Azurite, we extract creds from the connection string manually or use the helper
     // For simplicity with standard connection strings:
-    const blobName = `${Date.now()}-${filename}`;
+    const blobName = generateBlobName(filename);
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
     const sasToken = await blockBlobClient.generateSasUrl({
@@ -39,7 +40,7 @@ export class UploadService {
     });
 
     return {
-      uploadUrl: sasToken, // The full URL the frontend puts to
+      uploadUrl: sasToken, // The full URL the frontend will use to upload the file
       blobPath: blobName, // The 'key' we store in the DB
     };
   }
