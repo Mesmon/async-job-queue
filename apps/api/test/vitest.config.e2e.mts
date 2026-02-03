@@ -1,4 +1,4 @@
-import { nestConfig } from "@repo/vitest-config/dist/nest.js";
+import { nestConfig } from "@repo/vitest-config/nest";
 import swc from "unplugin-swc";
 import { defineConfig } from "vitest/config";
 

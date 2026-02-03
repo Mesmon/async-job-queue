@@ -1,5 +1,5 @@
 import { BlobSASPermissions, BlobServiceClient } from "@azure/storage-blob";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { addMinutes } from "date-fns";
 
@@ -8,7 +8,7 @@ export class UploadService {
   private blobServiceClient: BlobServiceClient;
   private containerName: string;
 
-  constructor(private config: ConfigService) {
+  constructor(@Inject(ConfigService) private readonly config: ConfigService) {
     // Initialize Azure Client
     const connectionString = this.config.getOrThrow<string>("AZURE_STORAGE_CONNECTION_STRING");
     this.containerName = this.config.getOrThrow<string>("AZURE_CONTAINER_NAME");

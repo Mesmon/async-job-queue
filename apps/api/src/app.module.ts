@@ -3,6 +3,8 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { AppController } from "./app.controller.js";
 import { AppService } from "./app.service.js";
+import { JobsModule } from "./jobs/job.module.js";
+import { UploadModule } from "./upload/upload.module.js";
 
 @Module({
   imports: [
@@ -19,9 +21,8 @@ import { AppService } from "./app.service.js";
       }),
       inject: [ConfigService],
     }),
-    BullModule.registerQueue({
-      name: "image-processing",
-    }),
+    UploadModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
