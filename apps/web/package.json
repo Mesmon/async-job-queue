@@ -9,7 +9,6 @@
     "start": "next start",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "format:check": "biome format --check .",
     "check": "biome check --write .",
     "check-types": "next typegen && tsc --noEmit"
   },

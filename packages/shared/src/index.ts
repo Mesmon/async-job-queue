@@ -1,1 +1,2 @@
-export * from './schemas/job';
+export * from "./config/validate-config";
+export * from "./schemas/job";
