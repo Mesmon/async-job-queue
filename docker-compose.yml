@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: async-job-queue-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: async_job_queue_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: async-job-queue-redis
+    ports:
+      - "6379:6379"
+
+  # Azure Emulator
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: async-job-queue-azurite
+    ports:
+      - "10000:10000" # Blob storage port
+      - "10001:10001" # Queue storage port
+      - "10002:10002" # Table storage port
+    volumes:
+      - azurite_data:/data
+
+volumes:
+  postgres_data:
+  azurite_data:
