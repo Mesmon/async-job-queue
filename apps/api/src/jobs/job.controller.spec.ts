@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from "@nestjs/testing";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { JobsController } from "./job.controller.js";
 import { JobsService } from "./job.service.js";
@@ -9,7 +9,15 @@ describe("JobsController", () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [JobsController],
-      providers: [JobsService],
+      providers: [
+        {
+          provide: JobsService,
+          useValue: {
+            createJob: vi.fn(),
+            getJobStatus: vi.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<JobsController>(JobsController);
