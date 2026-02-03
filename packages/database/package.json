@@ -21,13 +21,13 @@
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
-    "drizzle-orm": "^0.33.0",
+    "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "drizzle-kit": "^0.24.0",
+    "drizzle-kit": "^0.31.8",
     "typescript": "latest"
   }
 }

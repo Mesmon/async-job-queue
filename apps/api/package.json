@@ -13,5 +13,13 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "typescript": "latest"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.30.0",
+    "@nestjs/bullmq": "^11.0.4",
+    "@nestjs/config": "^4.0.2",
+    "@repo/database": "workspace:^",
+    "@repo/shared": "workspace:^",
+    "bullmq": "^5.67.2"
   }
 }
