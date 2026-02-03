@@ -3,23 +3,46 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "echo 'Add dev script here'",
-    "build": "echo 'Add build script here'",
-    "test": "echo 'Add test script here'",
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "nest start",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:debug": "vitest --inspect-brk --inspect --logHeapUsage --threads=false",
+    "test:e2e": "vitest run --config ./test/vitest.config.e2e.mts",
     "lint": "biome check .",
+    "check-types": "tsc --noEmit",
     "format": "biome format --write .",
     "check": "biome check --write ."
   },
-  "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "typescript": "latest"
-  },
   "dependencies": {
-    "@azure/storage-blob": "^12.30.0",
-    "@nestjs/bullmq": "^11.0.4",
-    "@nestjs/config": "^4.0.2",
-    "@repo/database": "workspace:^",
-    "@repo/shared": "workspace:^",
-    "bullmq": "^5.67.2"
+    "@nestjs/common": "^11.1.11",
+    "@nestjs/core": "^11.1.11",
+    "@nestjs/platform-express": "^11.1.11",
+    "@repo/api": "workspace:*",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "escape-html": "^1.0.3"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.14",
+    "@nestjs/schematics": "^11.0.9",
+    "@nestjs/testing": "^11.1.11",
+    "@repo/vitest-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.3",
+    "@types/supertest": "^6.0.3",
+    "vitest": "^1.6.0",
+    "unplugin-swc": "^1.4.5",
+    "@vitest/coverage-v8": "^1.6.0",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.2.2",
+    "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "5.5.4"
   }
 }

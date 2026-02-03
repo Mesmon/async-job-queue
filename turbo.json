@@ -1,14 +1,16 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "ui": "tui",
+  "globalDependencies": [
+    "**/.env.*local"
+  ],
   "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
     "build": {
       "dependsOn": [
         "^build"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".env*"
       ],
       "outputs": [
         ".next/**",
@@ -39,9 +41,7 @@
         "^check"
       ]
     },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    }
+    "test": {},
+    "test:e2e": {}
   }
 }

@@ -30,6 +30,9 @@
     "attributePosition": "auto"
   },
   "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
     "formatter": {
       "quoteStyle": "double",
       "jsxQuoteStyle": "double",
@@ -58,9 +61,7 @@
           "options": {
             "strictCase": true,
             "requireAscii": true,
-            "filenameCases": [
-              "kebab-case"
-            ]
+            "filenameCases": ["kebab-case"]
           }
         },
         "noParameterAssign": "error",
@@ -89,11 +90,7 @@
         "noConsole": {
           "level": "warn",
           "options": {
-            "allow": [
-              "warn",
-              "error",
-              "info"
-            ]
+            "allow": ["warn", "error", "info"]
           }
         }
       }
@@ -101,10 +98,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "tsconfig.json",
-        "**/*.json"
-      ],
+      "includes": ["tsconfig.json", "**/*.json"],
       "json": {
         "formatter": {
           "lineWidth": 60

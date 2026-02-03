@@ -1,134 +1,179 @@
-# Turborepo starter
+1. The Tech Stack Selection ("The Right Way")
+Repository: Turborepo (Fast, efficient monorepo management).
 
-This Turborepo starter is maintained by the Turborepo core team.
+Package Manager: pnpm (Strict dependency management, faster than npm/yarn).
 
-## Using this example
+Backend Framework: NestJS (The standard for scalable Node.js architectures. Excellent dependency injection and modularity).
 
-Run the following command:
+Database ORM: Drizzle ORM (Lighter, faster, and more SQL-like than Prisma. Currently the "modern" choice).
 
-```sh
-npx create-turbo@latest
-```
+Database: PostgreSQL.
 
-## What's inside?
+Queue: BullMQ + Redis.
 
-This Turborepo includes the following packages/apps:
+Frontend: React + Vite + TanStack Query (For managing async state/polling) + Shadcn/UI (Modern, accessible components).
 
-### Apps and Packages
+Validation: Zod (Shared schema validation for both frontend forms and backend DTOs).
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `biome.json`: shared Biome configuration for linting across the monorepo
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Phase 1: The Foundation (Monorepo Setup)
+We start by creating a shared environment.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+Initialize Turborepo:
 
-### Utilities
+Create apps/web (Frontend).
 
-This Turborepo has some additional tools already setup for you:
+Create apps/api (The HTTP Server).
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [Biome](https://biomejs.dev/) for code linting and formatting
+Create apps/worker (The Background Processor).
 
-### Build
+Create packages/shared (The secret weapon).
 
-To build all apps and packages, run the following command:
+Define Shared Schemas (packages/shared):
 
-```
-cd my-turborepo
+Why: We define the "Job" shape once. The API uses it to validate input, the Worker uses it to read the queue, and the Frontend uses it for form validation.
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+Action: Create a Zod schema for CreateJobRequest (contains prompt, imageExtension) and JobStatusEnum (QUEUED, PROCESSING, COMPLETED, FAILED).
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+Phase 2: Infrastructure & Data Modeling
+Before writing business logic, we define the data structure.
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Docker Compose (Local Dev):
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+Create a docker-compose.yml at the root spinning up PostgreSQL, Redis, and Azurite (Local Azure Storage emulator).
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+Tip: Don't develop against real Azure cloud resources if you can avoid it. Azurite is faster and free.
 
-### Develop
+Schema Definition (Drizzle):
 
-To develop all apps and packages, run the following command:
+Define the Jobs table:
 
-```
-cd my-turborepo
+TypeScript
+// schema.ts
+export const jobs = pgTable('jobs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  status: text('status').notNull().default('QUEUED'), // Enum in app logic
+  inputPath: text('input_path').notNull(),
+  outputPath: text('output_path'),
+  prompt: text('prompt').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+Run migrations to create the tables in Postgres.
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+Phase 3: The API Service (apps/api)
+This service is the traffic controller. It should be stateless and fast.
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+Module Structure:
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+UploadModule: Handles SAS token generation.
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+JobsModule: Handles job creation and status checks.
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+Step A: The SAS Token Endpoint:
 
-### Remote Caching
+Use @azure/storage-blob SDK.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Create an endpoint GET /upload/token.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Generate a BlobSASSignatureValues with Write permission only, expiring in 10 minutes.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+Return the SAS URL to the frontend.
 
-```
-cd my-turborepo
+Step B: The Job Producer:
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+Import BullModule from @nestjs/bullmq.
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+Endpoint POST /jobs:
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Validate body using the Zod schema from packages/shared.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Insert a new row into Postgres (status: QUEUED).
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+Inject the queue: await this.jobsQueue.add('transcode', { jobId: newJob.id }).
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+Crucial: Only send the jobId to the queue. Keep the payload small. The worker will fetch the rest from the DB.
 
-## Useful Links
+Phase 4: The Worker Service (apps/worker)
+This is the heavy lifter.
 
-Learn more about the power of Turborepo:
+Setup:
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+This is also a NestJS app, but it doesn't listen on an HTTP port (standalone application).
+
+It strictly connects to Redis.
+
+The Processor:
+
+Create a class decorated with @Processor('image-queue').
+
+Implement the @Process('transcode') method.
+
+Logic Flow (The "Right" Way):
+
+Fetch: db.select().from(jobs).where(eq(jobs.id, job.data.jobId)).
+
+Lock: Update DB status to PROCESSING.
+
+Stream: Use axios or fetch to get the image stream from the Azure (or Azurite) URL.
+
+Inference: POST the stream + prompt to Hugging Face API.
+
+Upload: Pipe the result buffer directly back to Azure Storage (outputs container).
+
+Complete: Update DB status to COMPLETED and save the outputPath.
+
+Resiliency:
+
+Wrap the logic in try/catch. On error, update DB to FAILED and record the error message.
+
+Phase 5: The Frontend (apps/web)
+State Management:
+
+Use TanStack Query (React Query). This is essential for handling the "Polling" mechanism.
+
+The Upload Hook:
+
+Don't write raw fetch calls. Create a custom hook useImageUpload:
+
+Call API to get SAS Token.
+
+Use azure-storage-blob browser SDK (or a simple PUT request) to upload the file.
+
+On success, call API POST /jobs.
+
+The Polling Component:
+
+Once a Job ID is returned, mount a component that queries GET /jobs/:id every 2 seconds.
+
+TanStack Query Setting: refetchInterval: (data) => data.status === 'COMPLETED' ? false : 2000.
+
+Once status is COMPLETED, display the image from the Azure URL.
+
+Visual Guide: Folder Structure
+To help you visualize the Monorepo structure, here is how the files should be organized:
+
+Plaintext
+/my-ai-project
+├── package.json
+├── turbo.json
+├── docker-compose.yml       <-- Redis, Postgres, Azurite
+├── packages/
+│   ├── db/                  <-- Shared Drizzle config & schema
+│   ├── shared/              <-- Shared Zod schemas & Types
+│   └── ui/                  <-- Shared React components (Shadcn)
+├── apps/
+│   ├── web/                 <-- React + Vite
+│   │   ├── src/hooks/use-polling.ts
+│   │   └── src/components/upload-form.tsx
+│   ├── api/                 <-- NestJS HTTP Server
+│   │   ├── src/jobs/jobs.controller.ts
+│   │   └── src/upload/upload.service.ts
+│   └── worker/              <-- NestJS Worker
+│       └── src/job.processor.ts
+What makes this the "Right" way?
+Type Safety across boundaries: If you change the Job status enum in packages/shared, the Frontend, API, and Worker will all fail to build immediately. You catch bugs at compile time, not runtime.
+
+Separation of Concerns: The API is fast and responsive. The Worker handles the slow, error-prone tasks.
+
+Observable State: Because we use a DB for job status (not just Redis), we can run analytics later (e.g., "Average generation time") and the user can refresh the page without losing their job progress.
+
+Developer Experience: Docker compose means a new developer can run docker-compose up and pnpm dev and have the entire cloud architecture running locally on their laptop.

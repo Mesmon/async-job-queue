@@ -1,21 +1,32 @@
 {
-  "name": "async-job-queue",
+  "name": "my-turborepo",
+  "version": "0.0.0",
   "private": true,
+  "description": "",
+  "author": "",
+  "license": "UNLICENSED",
   "scripts": {
-    "build": "turbo run build",
     "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
-    "format": "biome format --write .",
     "check": "biome check --write .",
-    "check-types": "turbo run check-types"
+    "format": "biome format --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.13",
-    "turbo": "^2.8.1",
-    "typescript": "5.9.2"
+    "@biomejs/biome": "^2.3.13",
+    "@repo/typescript-config": "workspace:*",
+    "turbo": "^2.8.2"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@8.15.5",
   "engines": {
     "node": ">=18"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.2",
+      "@types/react-dom": "19.2.2"
+    }
   }
 }
