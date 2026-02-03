@@ -1,47 +1,40 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalDependencies": [
-    "**/.env.*local"
-  ],
+  "globalDependencies": ["**/.env.*local"],
   "tasks": {
     "dev": {
       "cache": false,
       "persistent": true
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-        "dist/**"
+        "dist/**",
+        "build/**"
       ]
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$"
-      ]
+      "dependsOn": ["^check-types", "^build"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+      "dependsOn": ["^lint"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
-    "format": {
-      "dependsOn": [
-        "^format"
-      ]
+    "//#format-and-lint": {},
+    "//#format-and-lint:fix": {
+      "cache": false
     },
-    "check": {
-      "dependsOn": [
-        "^check"
-      ]
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "test/**", "vitest.config.*"]
     },
-    "test": {},
-    "test:e2e": {}
+    "test:e2e": {
+      "cache": false
+    }
   }
 }

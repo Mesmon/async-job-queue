@@ -122,6 +122,27 @@
           "recommended": true
         }
       }
+    },
+    {
+      "includes": [
+        "**/*.module.ts",
+        "**/*.controller.ts",
+        "**/*.service.ts",
+        "**/*.resolver.ts",
+        "**/*.entity.ts",
+        "**/*.guard.ts",
+        "**/*.interceptor.ts",
+        "**/*.strategy.ts",
+        "**/*.gateway.ts",
+        "**/*.dto.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off"
+          }
+        }
+      }
     }
   ]
 }
