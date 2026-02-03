@@ -1,9 +1,11 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "outDir": "dist"
   },
-  "include": ["src"],
+  "include": ["src/**/*.ts", "drizzle.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

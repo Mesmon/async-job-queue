@@ -8,10 +8,10 @@
     "access": "public"
   },
   "exports": {
-    ".": "./src/entry.ts",
-    "./base": "./src/base.ts",
-    "./nest": "./src/nest.ts",
-    "./next": "./src/next.ts"
+    ".": "./dist/entry.js",
+    "./base": "./dist/base.js",
+    "./nest": "./dist/nest.js",
+    "./next": "./dist/next.js"
   },
   "devDependencies": {
     "vitest": "^1.6.0",
@@ -20,5 +20,9 @@
   "peerDependencies": {
     "vitest": "*"
   },
-  "scripts": {}
+  "types": "./dist/entry.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  }
 }

@@ -21,7 +21,7 @@
     "@repo/typescript-config": "workspace:*",
     "turbo": "^2.8.2"
   },
-  "packageManager": "pnpm@10.0.0^",
+  "packageManager": "pnpm@10.5.2",
   "engines": {
     "node": ">=18"
   },

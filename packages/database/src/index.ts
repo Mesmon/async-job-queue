@@ -1,10 +1,10 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { config } from "./config";
-import * as schema from "./schema";
+import { config } from "./config/index.js";
+import * as schema from "./schema.js";
 
 // Export the schema so apps can use it in queries
-export * from "./schema";
+export * from "./schema.js";
 
 const connectionString = config.databaseUrl;
 
