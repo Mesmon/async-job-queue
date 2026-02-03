@@ -18,10 +18,19 @@
     "check": "biome check --write ."
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.30.0",
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.11",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.11",
     "@nestjs/platform-express": "^11.1.11",
     "@repo/api": "workspace:*",
+    "@repo/database": "workspace:^",
+    "@repo/shared": "workspace:^",
+    "bullmq": "^5.67.2",
+    "date-fns": "^4.1.0",
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:",
     "escape-html": "^1.0.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
