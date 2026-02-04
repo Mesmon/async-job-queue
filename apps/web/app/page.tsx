@@ -1,8 +1,5 @@
-import type { Link } from "@repo/api";
-import { Button } from "@repo/ui/button";
 import Image, { type ImageProps } from "next/image";
-
-import styles from "./page.module.css";
+import { FileUpload } from "./components/FileUpload";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -14,121 +11,92 @@ const ThemeImage = (props: Props) => {
 
   return (
     <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
+      <Image {...rest} src={srcLight} className="inline-block dark:hidden" />
+      <Image {...rest} src={srcDark} className="hidden dark:inline-block" />
     </>
   );
 };
 
-async function getLinks(): Promise<Link[]> {
-  try {
-    const res = await fetch("http://localhost:3000/links", {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch links");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching links:", error);
-    return [];
-  }
-}
-
-export default async function Home() {
-  const links = await getLinks();
-
+export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
+    <div className="min-h-screen bg-background flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <header className="w-full max-w-4xl flex items-center justify-between mb-16">
         <ThemeImage
-          className={styles.logo}
           srcLight="turborepo-dark.svg"
           srcDark="turborepo-light.svg"
           alt="Turborepo logo"
-          width={180}
-          height={38}
+          width={140}
+          height={30}
           priority
         />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+        <div className="flex gap-4 text-sm text-muted-foreground">
+          <a href="#" className="hover:text-foreground transition-colors">
+            Documentation
           </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
+          <a href="#" className="hover:text-foreground transition-colors">
+            GitHub
           </a>
         </div>
+      </header>
 
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
+      <main className="w-full max-w-4xl flex flex-col items-center flex-grow">
+        <div className="text-center mb-12 space-y-4">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-muted-foreground">
+            Async Job Queue
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
+            A modern, scalable solution for handling long-running image processing tasks. Upload
+            your files and watch the magic happen in real-time.
+          </p>
+        </div>
 
-        {links.length > 0 ? (
-          <div className={styles.ctas}>
-            {links.map((link) => (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={link.description}
-                className={styles.secondary}
-              >
-                {link.title}
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div style={{ color: "#666" }}>
-            No links available. Make sure the NestJS API is running on port 3000.
-          </div>
-        )}
+        <FileUpload />
+
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+          <Feature
+            title="Fast Uploads"
+            description="Direct-to-cloud uploading ensures your files reach storage safely and quickly."
+          />
+          <Feature
+            title="Async Processing"
+            description="Our robust queue handles the heavy lifting without blocking your workflow."
+          />
+          <Feature
+            title="Real-time Updates"
+            description="Stay informed with live status polling and instant feedback on job completion."
+          />
+        </div>
       </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image aria-hidden src="/window.svg" alt="Window icon" width={16} height={16} />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
-          Go to turborepo.dev →
-        </a>
+      <footer className="w-full max-w-4xl mt-24 border-t pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground pb-8">
+        <p>© 2026 Async Job Queue. Built with Turborepo & Next.js.</p>
+        <div className="flex gap-6 mt-4 md:mt-0">
+          <a
+            href="https://vercel.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 hover:text-foreground transition-colors"
+          >
+            <Image
+              src="/vercel.svg"
+              alt="Vercel icon"
+              width={14}
+              height={14}
+              className="dark:invert"
+            />
+            Powered by Vercel
+          </a>
+        </div>
       </footer>
+    </div>
+  );
+}
+
+function Feature({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="p-6 rounded-xl border bg-card/50 backdrop-blur-sm">
+      <h3 className="font-bold text-lg mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
     </div>
   );
 }
