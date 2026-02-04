@@ -213,6 +213,118 @@ importers:
         specifier: 5.8.2
         version: 5.8.2
 
+  apps/worker:
+    dependencies:
+      '@azure/storage-blob':
+        specifier: ^12.30.0
+        version: 12.30.0
+      '@nestjs/bullmq':
+        specifier: ^11.0.4
+        version: 11.0.4(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(bullmq@5.67.2)
+      '@nestjs/common':
+        specifier: ^11.1.11
+        version: 11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.2
+        version: 4.0.2(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.11
+        version: 11.1.13(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-express':
+        specifier: ^11.1.11
+        version: 11.1.13(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@repo/database':
+        specifier: workspace:^
+        version: link:../../packages/database
+      '@repo/shared':
+        specifier: workspace:^
+        version: link:../../packages/shared
+      axios:
+        specifier: ^1.13.4
+        version: 1.13.4
+      bullmq:
+        specifier: ^5.67.2
+        version: 5.67.2
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@nestjs/cli':
+        specifier: ^11.0.14
+        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.11)(chokidar@4.0.3))(@swc/core@1.15.11)(@types/node@22.19.8)
+      '@nestjs/schematics':
+        specifier: ^11.0.9
+        version: 11.0.9(chokidar@4.0.3)(typescript@5.5.4)
+      '@nestjs/testing':
+        specifier: ^11.1.11
+        version: 11.1.13(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/platform-express@11.1.13)
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@repo/vitest-config':
+        specifier: workspace:*
+        version: link:../../packages/vitest-config
+      '@swc/cli':
+        specifier: ^0.7.10
+        version: 0.7.10(@swc/core@1.15.11)(chokidar@4.0.3)
+      '@swc/core':
+        specifier: ^1.15.11
+        version: 1.15.11
+      '@types/express':
+        specifier: ^4.17.25
+        version: 4.17.25
+      '@types/node':
+        specifier: ^22.19.3
+        version: 22.19.8
+      '@types/supertest':
+        specifier: ^6.0.3
+        version: 6.0.3
+      '@vitest/coverage-v8':
+        specifier: ^1.6.0
+        version: 1.6.1(vitest@1.6.1(@types/node@22.19.8)(lightningcss@1.30.2)(terser@5.46.0))
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      supertest:
+        specifier: ^7.2.2
+        version: 7.2.2
+      ts-loader:
+        specifier: ^9.5.4
+        version: 9.5.4(typescript@5.5.4)(webpack@5.104.1(@swc/core@1.15.11))
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.15.11)(@types/node@22.19.8)(typescript@5.5.4)
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: 5.5.4
+        version: 5.5.4
+      unplugin-swc:
+        specifier: ^1.4.5
+        version: 1.5.9(@swc/core@1.15.11)(rollup@4.57.1)
+      vite-tsconfig-paths:
+        specifier: ^6.0.5
+        version: 6.0.5(typescript@5.5.4)(vite@7.3.1(@types/node@22.19.8)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(tsx@4.21.0))
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@22.19.8)(lightningcss@1.30.2)(terser@5.46.0)
+
   packages/api:
     dependencies:
       '@nestjs/mapped-types':
@@ -2395,6 +2507,9 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
 
+  axios@1.13.4:
+    resolution: {integrity: sha512-1wVkUaAO6WyaYtCkcYCOx12ZgpGf9Zif+qXa4n+oYzK558YryKqiL6UWwd5DqiH3VRW0GYhTZQ/vlgJrCoNQlg==}
+
   b4a@1.7.3:
     resolution: {integrity: sha512-5Q2mfq2WfGuFp3uS//0s6baOJLMoVduPYVeNmDYxu5OUA1/cBfvr2RIS7vi62LdNj/urk1hfmj867I3qt6uZ7Q==}
     peerDependencies:
@@ -3019,6 +3134,15 @@ packages:
   find-versions@5.1.0:
     resolution: {integrity: sha512-+iwzCJ7C5v5KgcBuueqVoNiHVoQpwiUK5XFLjf0affFTep+Wcw93tPvmb8tqujDNmzhBDPddnWV/qgWSXgq+Hg==}
     engines: {node: '>=12'}
+
+  follow-redirects@1.15.11:
+    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
 
   fork-ts-checker-webpack-plugin@9.1.0:
     resolution: {integrity: sha512-mpafl89VFPJmhnJ1ssH+8wmM2b50n+Rew5x42NeI2U78aRWgtkEtGmctp7iT16UjquJTjorEmIfESj3DxdW84Q==}
@@ -3737,6 +3861,9 @@ packages:
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
+
+  proxy-from-env@1.1.0:
+    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -6304,6 +6431,14 @@ snapshots:
       postcss: 8.5.6
       postcss-value-parser: 4.2.0
 
+  axios@1.13.4:
+    dependencies:
+      follow-redirects: 1.15.11
+      form-data: 4.0.5
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
   b4a@1.7.3: {}
 
   balanced-match@1.0.2: {}
@@ -6938,6 +7073,8 @@ snapshots:
   find-versions@5.1.0:
     dependencies:
       semver-regex: 4.0.5
+
+  follow-redirects@1.15.11: {}
 
   fork-ts-checker-webpack-plugin@9.1.0(typescript@5.9.3)(webpack@5.104.1(@swc/core@1.15.11)):
     dependencies:
@@ -7609,6 +7746,8 @@ snapshots:
     dependencies:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
+
+  proxy-from-env@1.1.0: {}
 
   punycode@2.3.1: {}
 

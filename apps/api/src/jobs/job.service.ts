@@ -1,9 +1,8 @@
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable } from "@nestjs/common";
-import { db, jobs } from "@repo/database";
+import { db, eq, jobs } from "@repo/database";
 import { CreateJobRequest, JobStatus } from "@repo/shared";
 import { Queue } from "bullmq";
-import { eq } from "drizzle-orm";
 
 @Injectable()
 export class JobsService {

@@ -1,13 +1,13 @@
 "use client";
 
+import { Loader2, Send, Upload } from "lucide-react";
 import { useState } from "react";
-import { uploadApi } from "@/api/upload";
 import { jobsApi } from "@/api/jobs";
+import { uploadApi } from "@/api/upload";
 import { JobStatus } from "./job-status";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Loader2, Upload, Send } from "lucide-react";
+import { Input } from "./ui/input";
 
 export function FileUpload() {
   const [file, setFile] = useState<File | null>(null);
