@@ -5,19 +5,18 @@ import { ConfigService } from "@nestjs/config";
 import { db, eq, jobs } from "@repo/database";
 import { JobStatus } from "@repo/shared";
 import type { Job } from "bullmq";
-import { HuggingFaceService } from "../inference/hugging-face.service.js";
+import { AzureFluxService } from "../inference/azure-flux.service.js";
 
 @Processor("image-processing")
 export class JobsProcessor extends WorkerHost {
   private readonly logger = new Logger(JobsProcessor.name, { timestamp: true });
-
   private blobServiceClient: BlobServiceClient;
   private inputContainer: string;
   private outputContainer: string;
 
   constructor(
     @Inject(ConfigService) private config: ConfigService,
-    @Inject(HuggingFaceService) private hfService: HuggingFaceService,
+    @Inject(AzureFluxService) private fluxService: AzureFluxService,
   ) {
     super();
     // Initialize Azure
@@ -28,31 +27,29 @@ export class JobsProcessor extends WorkerHost {
     this.outputContainer = this.config.getOrThrow("AZURE_OUTPUT_CONTAINER");
   }
 
-  // This method runs for every job in the queue
   async process(job: Job<{ jobId: string }>): Promise<void> {
     const { jobId } = job.data;
-    this.logger.log(`[Worker] Processing Job ${jobId}...`);
+    this.logger.log(`[Worker] Processing Job ${jobId} via Azure FLUX.2-pro...`);
 
     try {
-      // 1. Fetch Job Metadata from DB
+      // 1. Fetch Job Metadata
       const [jobRecord] = await db.select().from(jobs).where(eq(jobs.id, jobId));
-
       if (!jobRecord) {
-        throw new Error("Job record not found in DB");
+        throw new Error("Job record not found");
       }
 
-      // 2. Update Status -> PROCESSING
+      // 2. Set Status -> PROCESSING
       await db.update(jobs).set({ status: JobStatus.enum.PROCESSING }).where(eq(jobs.id, jobId));
 
-      // 3. Download Image from Azure (Input)
+      // 3. Download Input Image (User upload)
       const inputBuffer = await this.downloadFromAzure(jobRecord.inputPath);
 
-      // 4. Call AI Inference
-      this.logger.log("[Worker] Sending to Hugging Face...");
-      const outputBuffer = await this.hfService.generateImage(inputBuffer, jobRecord.prompt);
+      // 4. Call FLUX.2-pro
+      const outputBuffer = await this.fluxService.generateImage(inputBuffer, jobRecord.prompt);
 
-      // 5. Upload Result to Azure (Output)
-      const outputFilename = `result-${jobId}.jpg`;
+      // 5. Upload Output Image
+      // FLUX returns high quality images, PNG is best to preserve details
+      const outputFilename = `result-${jobId}.png`;
       await this.uploadToAzure(outputBuffer, outputFilename);
 
       // 6. Update Status -> COMPLETED
@@ -60,7 +57,7 @@ export class JobsProcessor extends WorkerHost {
         .update(jobs)
         .set({
           status: JobStatus.enum.COMPLETED,
-          outputPath: outputFilename, // Save the reference
+          outputPath: outputFilename,
         })
         .where(eq(jobs.id, jobId));
 
@@ -68,7 +65,6 @@ export class JobsProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(`[Worker] Job ${jobId} Failed:`, error);
 
-      // 7. Handle Failure
       await db
         .update(jobs)
         .set({
@@ -86,8 +82,6 @@ export class JobsProcessor extends WorkerHost {
   private async downloadFromAzure(blobName: string): Promise<Buffer> {
     const containerClient = this.blobServiceClient.getContainerClient(this.inputContainer);
     const blobClient = containerClient.getBlockBlobClient(blobName);
-
-    // Download to a buffer
     const downloadBlockBlobResponse = await blobClient.download(0);
     return await this.streamToBuffer(downloadBlockBlobResponse.readableStreamBody!);
   }
@@ -95,7 +89,6 @@ export class JobsProcessor extends WorkerHost {
   private async uploadToAzure(buffer: Buffer, blobName: string) {
     const containerClient = this.blobServiceClient.getContainerClient(this.outputContainer);
     await containerClient.createIfNotExists();
-
     const blobClient = containerClient.getBlockBlobClient(blobName);
     await blobClient.upload(buffer, buffer.length);
   }
