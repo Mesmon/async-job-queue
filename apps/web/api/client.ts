@@ -1,4 +1,4 @@
-import { env } from "./config";
+import { env } from "@/lib/config";
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = path.startsWith("http") ? path : `${env.API_URL}${path}`;

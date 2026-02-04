@@ -1,13 +1,13 @@
 "use client";
 
-import type { Job, UploadFileRequest } from "@repo/shared/schemas";
-import { Loader2, Send, Upload } from "lucide-react";
 import { useState } from "react";
-import { apiClient } from "@/lib/api";
+import { uploadApi } from "@/api/upload";
+import { jobsApi } from "@/api/jobs";
 import { JobStatus } from "./job-status";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { Loader2, Upload, Send } from "lucide-react";
 
 export function FileUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -33,10 +33,7 @@ export function FileUpload() {
     setActiveJobId(null);
 
     try {
-      const { uploadUrl, blobPath } = await apiClient.post<{ uploadUrl: string; blobPath: string }>(
-        "/upload/token",
-        { filename: file.name } as UploadFileRequest,
-      );
+      const { uploadUrl, blobPath } = await uploadApi.getUploadToken({ filename: file.name });
 
       setStatus("Uploading to storage...");
       const uploadToAzure = await fetch(uploadUrl, {
@@ -53,7 +50,7 @@ export function FileUpload() {
       }
 
       setStatus("Creating job...");
-      const job = await apiClient.post<Job>("/jobs", {
+      const job = await jobsApi.createJob({
         prompt,
         inputImagePath: blobPath,
       });
@@ -87,13 +84,20 @@ export function FileUpload() {
             <label htmlFor="image-file" className="text-sm font-medium">
               Image File
             </label>
-            <Input
-              id="image-file"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="cursor-pointer"
-            />
+            <div className="relative">
+              <Input
+                id="image-file"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="absolute inset-0 z-10 h-full w-full opacity-0 cursor-pointer"
+              />
+              <div className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                <span className="text-muted-foreground truncate">
+                  {file ? file.name : "Click to select an image..."}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="space-y-2">
             <label htmlFor="processing-prompt" className="text-sm font-medium">

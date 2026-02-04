@@ -2,7 +2,7 @@ import type { Job } from "@repo/shared/schemas";
 import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { apiClient } from "@/lib/api";
+import { jobsApi } from "@/api/jobs";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
@@ -15,7 +15,7 @@ export function JobStatus({ jobId }: { jobId: string }) {
 
     const fetchStatus = async () => {
       try {
-        const data = await apiClient.get<Job>(`/jobs/${jobId}`);
+        const data = await jobsApi.getJobStatus(jobId);
         setJob(data);
 
         if (data.status === "COMPLETED" || data.status === "FAILED") {
