@@ -13,6 +13,7 @@
     "check": "biome check --write ."
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.2.6",
     "@repo/shared": "workspace:^",
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.20",

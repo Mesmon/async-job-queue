@@ -1,19 +1,32 @@
+import { BlobSASPermissions, BlobServiceClient } from "@azure/storage-blob";
 import { InjectQueue } from "@nestjs/bullmq";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { db, eq, jobs } from "@repo/database";
 import { CreateJobRequest, JobStatus } from "@repo/shared";
 import { Queue } from "bullmq";
+import { addMinutes } from "date-fns";
 
 @Injectable()
 export class JobsService {
-  constructor(@InjectQueue("image-processing") private jobQueue: Queue) {}
+  private blobServiceClient: BlobServiceClient;
+  private outputContainerName: string;
+
+  constructor(
+    @InjectQueue("image-processing") private jobQueue: Queue,
+    @Inject(ConfigService) private config: ConfigService,
+  ) {
+    const connectionString = this.config.getOrThrow<string>("AZURE_STORAGE_CONNECTION_STRING");
+    this.outputContainerName = this.config.getOrThrow<string>("AZURE_OUTPUT_CONTAINER");
+    this.blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+  }
 
   async createJob(dto: CreateJobRequest) {
     const [record] = await db
       .insert(jobs)
       .values({
-        prompt: dto.prompt,
-        inputPath: dto.inputImagePath,
+        inputPath: dto.inputPath,
+        processingOptions: dto.processingOptions,
         status: JobStatus.enum.QUEUED,
       })
       .returning();
@@ -32,6 +45,20 @@ export class JobsService {
     if (!job) {
       throw new Error("Job not found");
     }
+
+    if (job.outputPath) {
+      const containerClient = this.blobServiceClient.getContainerClient(this.outputContainerName);
+      const blobClient = containerClient.getBlockBlobClient(job.outputPath);
+
+      const sasToken = await blobClient.generateSasUrl({
+        permissions: BlobSASPermissions.parse("r"),
+        startsOn: new Date(),
+        expiresOn: addMinutes(new Date(), 60),
+      });
+
+      job.outputPath = sasToken;
+    }
+
     return job;
   }
 }

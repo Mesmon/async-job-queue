@@ -1,5 +1,5 @@
 import Image, { type ImageProps } from "next/image";
-import { GeneratorView } from "./components/generator-view";
+import { ProcessorView } from "./components/processor-view";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -52,11 +52,11 @@ export default function Home() {
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
             A modern, scalable solution for handling long-running image processing tasks. Upload
-            your files and watch the magic happen in real-time.
+            your files and configure processing options in real-time.
           </p>
         </div>
 
-        <GeneratorView />
+        <ProcessorView />
 
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <Feature

@@ -1,7 +1,6 @@
 import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { AzureFluxService } from "./inference/azure-flux.service.js";
 import { JobsProcessor } from "./jobs/jobs.processor.js";
 
 @Module({
@@ -25,6 +24,6 @@ import { JobsProcessor } from "./jobs/jobs.processor.js";
       name: "image-processing",
     }),
   ],
-  providers: [JobsProcessor, AzureFluxService],
+  providers: [JobsProcessor],
 })
 export class AppModule {}

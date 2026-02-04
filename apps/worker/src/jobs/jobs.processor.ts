@@ -5,7 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { db, eq, jobs } from "@repo/database";
 import { JobStatus } from "@repo/shared";
 import type { Job } from "bullmq";
-import { AzureFluxService } from "../inference/azure-flux.service.js";
+import sharp from "sharp";
 
 @Processor("image-processing")
 export class JobsProcessor extends WorkerHost {
@@ -14,10 +14,7 @@ export class JobsProcessor extends WorkerHost {
   private inputContainer: string;
   private outputContainer: string;
 
-  constructor(
-    @Inject(ConfigService) private config: ConfigService,
-    @Inject(AzureFluxService) private fluxService: AzureFluxService,
-  ) {
+  constructor(@Inject(ConfigService) private config: ConfigService) {
     super();
     // Initialize Azure
     this.blobServiceClient = BlobServiceClient.fromConnectionString(
@@ -29,7 +26,7 @@ export class JobsProcessor extends WorkerHost {
 
   async process(job: Job<{ jobId: string }>): Promise<void> {
     const { jobId } = job.data;
-    this.logger.log(`[Worker] Processing Job ${jobId} via Azure FLUX.2-pro...`);
+    this.logger.log(`[Worker] Processing Job ${jobId}...`);
 
     try {
       // 1. Fetch Job Metadata
@@ -44,11 +41,47 @@ export class JobsProcessor extends WorkerHost {
       // 3. Download Input Image (User upload)
       const inputBuffer = await this.downloadFromAzure(jobRecord.inputPath);
 
-      // 4. Call FLUX.2-pro
-      const outputBuffer = await this.fluxService.generateImage(inputBuffer, jobRecord.prompt);
+      // 4. Process Image with Sharp
+      if (!jobRecord.processingOptions) {
+        throw new Error("Processing options not found");
+      }
+      const filterType = jobRecord.processingOptions.type;
+      const watermarkText = jobRecord.processingOptions.watermark_text;
+      let pipeline = sharp(inputBuffer);
+
+      if (jobRecord.processingOptions) {
+        switch (filterType) {
+          case "GRAYSCALE":
+            pipeline = pipeline.grayscale();
+            break;
+          case "BLUR":
+            pipeline = pipeline.blur(10);
+            break;
+          case "RESIZE":
+            pipeline = pipeline.resize(800, 600);
+            break;
+          default:
+            throw new Error(`Unknown processing type: ${filterType satisfies never}`);
+        }
+        if (watermarkText) {
+          const svgWatermark = `<svg width="800" height="600">
+            <text x="10" y="50" font-size="48" fill="white" opacity="0.5">${watermarkText}</text>
+          </svg>`;
+          pipeline = pipeline.composite([
+            {
+              input: Buffer.from(svgWatermark),
+              gravity: "southeast",
+            },
+          ]);
+        }
+      }
+
+      this.logger.log(`[Worker] Simulating heavy CPU work for Job ${jobId} for 5 seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      const outputBuffer = await pipeline.png().toBuffer();
 
       // 5. Upload Output Image
-      // FLUX returns high quality images, PNG is best to preserve details
       const outputFilename = `result-${jobId}.png`;
       await this.uploadToAzure(outputBuffer, outputFilename);
 

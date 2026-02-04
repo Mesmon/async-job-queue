@@ -9,10 +9,14 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-export function GeneratorView() {
+type ProcessingType = "GRAYSCALE" | "BLUR" | "RESIZE";
+
+export function ProcessorView() {
   const [file, setFile] = useState<File | null>(null);
-  const [prompt, setPrompt] = useState("");
+  const [processingType, setProcessingType] = useState<ProcessingType>("GRAYSCALE");
+  const [watermarkText, setWatermarkText] = useState("");
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   const { upload, isPending: isUploading, error: uploadError } = useUploadFlow();
@@ -30,14 +34,20 @@ export function GeneratorView() {
   };
 
   const handleUpload = async () => {
-    if (!file || !prompt) {
+    if (!file) {
       return;
     }
     try {
-      const jobResponse = await upload({ file, prompt });
+      const jobResponse = await upload({
+        file,
+        processingOptions: {
+          type: processingType,
+          watermark_text: watermarkText || undefined,
+        },
+      });
       setActiveJobId(jobResponse.id);
       setFile(null);
-      setPrompt("");
+      setWatermarkText("");
     } catch (err) {
       console.error("Upload failed", err);
     }
@@ -53,11 +63,9 @@ export function GeneratorView() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ImageIcon className="w-6 h-6 text-primary" />
-            AI Image Transformer
+            Image Processor
           </CardTitle>
-          <CardDescription>
-            Upload your base image and describe the transformation you want.
-          </CardDescription>
+          <CardDescription>Upload your base image and select processing options.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -81,23 +89,43 @@ export function GeneratorView() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="prompt" className="text-sm font-semibold text-foreground/80">
-              Transformation Prompt
-            </label>
-            <Input
-              id="prompt"
-              placeholder="Describe what to do (e.g. 'Make it a cyberpunk landscape')"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="h-12"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="processingType" className="text-sm font-semibold text-foreground/80">
+                Processing Type
+              </label>
+              <Select
+                value={processingType}
+                onValueChange={(value) => setProcessingType(value as ProcessingType)}
+              >
+                <SelectTrigger id="processingType">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GRAYSCALE">Grayscale</SelectItem>
+                  <SelectItem value="BLUR">Blur</SelectItem>
+                  <SelectItem value="RESIZE">Resize</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="watermark" className="text-sm font-semibold text-foreground/80">
+                Watermark Text <span className="text-muted-foreground font-normal">(Optional)</span>
+              </label>
+              <Input
+                id="watermark"
+                placeholder="e.g. 'Confidential'"
+                value={watermarkText}
+                onChange={(e) => setWatermarkText(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button
             onClick={handleUpload}
-            disabled={isUploading || !file || !prompt}
+            disabled={isUploading || !file}
             className="w-full h-12 text-base font-bold shadow-md transition-all hover:scale-[1.01]"
           >
             {isUploading ? (
@@ -108,7 +136,7 @@ export function GeneratorView() {
             ) : (
               <>
                 <Send className="mr-2 h-5 w-5" />
-                Generate Transformation
+                Start Processing
               </>
             )}
           </Button>
@@ -170,17 +198,26 @@ export function GeneratorView() {
               <>
                 <div className="bg-muted/50 p-4 rounded-lg border border-primary/5">
                   <p className="text-sm text-muted-foreground font-medium mb-1 uppercase tracking-wider">
-                    Prompt Used
+                    Options Used
                   </p>
-                  <p className="text-foreground italic font-medium leading-relaxed">
-                    "{job.prompt}"
-                  </p>
+                  <div className="text-foreground italic font-medium leading-relaxed">
+                    {job.processingOptions ? (
+                      <ul className="list-disc list-inside">
+                        <li>Type: {job.processingOptions.type}</li>
+                        {job.processingOptions.watermark_text && (
+                          <li>Watermark: {job.processingOptions.watermark_text}</li>
+                        )}
+                      </ul>
+                    ) : (
+                      "No options"
+                    )}
+                  </div>
                 </div>
 
                 <div className="relative rounded-xl overflow-hidden border-4 border-background shadow-2xl bg-muted aspect-video flex items-center justify-center">
-                  {job.outputImagePath ? (
+                  {job.outputPath ? (
                     <Image
-                      src={job.outputImagePath}
+                      src={job.outputPath}
                       alt="Transformed Result"
                       fill
                       className="object-cover"
@@ -189,9 +226,7 @@ export function GeneratorView() {
                   ) : isProcessing ? (
                     <div className="flex flex-col items-center text-muted-foreground gap-3">
                       <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
-                      <p className="text-sm font-medium animate-pulse">
-                        AI is working its magic...
-                      </p>
+                      <p className="text-sm font-medium animate-pulse">Processing image...</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-muted-foreground gap-2">

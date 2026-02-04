@@ -1,4 +1,4 @@
-import type { Job } from "@repo/shared/schemas";
+import type { Job, ProcessingOptions } from "@repo/shared/schemas";
 import { useMutation } from "@tanstack/react-query";
 import { blobClient } from "@/api/client";
 import { jobsApi } from "@/api/jobs";
@@ -6,12 +6,12 @@ import { uploadApi } from "@/api/upload";
 
 interface UploadFlowParams {
   file: File;
-  prompt: string;
+  processingOptions: ProcessingOptions;
 }
 
 export function useUploadFlow() {
   const mutation = useMutation({
-    mutationFn: async ({ file, prompt }: UploadFlowParams): Promise<Job> => {
+    mutationFn: async ({ file, processingOptions }: UploadFlowParams): Promise<Job> => {
       // Step 1: Get SAS Token
       const { uploadUrl, blobPath } = await uploadApi.getUploadToken({
         filename: file.name,
@@ -26,8 +26,8 @@ export function useUploadFlow() {
 
       // Step 3: Create Job in API
       return jobsApi.createJob({
-        prompt,
-        inputImagePath: blobPath,
+        processingOptions,
+        inputPath: blobPath,
       });
     },
   });

@@ -13,6 +13,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -35,6 +38,9 @@
   --accent: #f4f4f5;
   --accent-foreground: #18181b;
 
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+
   --border: #e4e4e7;
   --input: #e4e4e7;
   --ring: #18181b;
@@ -55,6 +61,9 @@
 
     --accent: #27272a;
     --accent-foreground: #fafafa;
+
+    --popover: #0a0a0a;
+    --popover-foreground: #fafafa;
 
     --border: #27272a;
     --input: #27272a;
