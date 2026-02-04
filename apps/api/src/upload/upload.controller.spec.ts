@@ -6,8 +6,10 @@ import { UploadService } from "./upload.service.js";
 
 describe("UploadController", () => {
   let controller: UploadController;
+  let module: TestingModule;
+
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [UploadController],
       providers: [
         {
@@ -24,5 +26,21 @@ describe("UploadController", () => {
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
+  });
+
+  it("should generate SAS token", async () => {
+    const filename = "test.jpg";
+    const service = module.get<UploadService>(UploadService);
+    vi.mocked(service.generateSasToken).mockResolvedValue({
+      uploadUrl: "mock-url",
+      blobPath: "mock-path",
+    });
+
+    const result = await controller.getToken({ filename });
+    expect(result).toEqual({
+      uploadUrl: "mock-url",
+      blobPath: "mock-path",
+    });
+    expect(service.generateSasToken).toHaveBeenCalledWith(filename);
   });
 });
