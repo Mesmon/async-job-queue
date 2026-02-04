@@ -22,7 +22,20 @@ export class UploadService {
     const containerClient = this.blobServiceClient.getContainerClient(this.containerName);
     await containerClient.createIfNotExists();
 
-    // 2. Setup permissions (Write only, expires in 10 mins)
+    // 2. Configure CORS (Essential for direct browser uploads)
+    await this.blobServiceClient.setProperties({
+      cors: [
+        {
+          allowedOrigins: "*", // TODO: In production, replace with your specific origin like http://localhost:3001
+          allowedMethods: "GET,PUT,POST,OPTIONS",
+          allowedHeaders: "*",
+          exposedHeaders: "*",
+          maxAgeInSeconds: 3600,
+        },
+      ],
+    });
+
+    // 3. Setup permissions (Write only, expires in 10 mins)
     const startsOn = new Date();
     const expiresOn = addMinutes(new Date(), 10);
     const permissions = BlobSASPermissions.parse("w"); // Write only

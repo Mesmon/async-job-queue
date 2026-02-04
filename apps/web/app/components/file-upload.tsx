@@ -1,9 +1,10 @@
 "use client";
 
-import type { UploadFileRequest } from "@repo/shared/schemas";
+import type { Job, UploadFileRequest } from "@repo/shared/schemas";
 import { Loader2, Send, Upload } from "lucide-react";
 import { useState } from "react";
-import { JobStatus } from "./JobStatus";
+import { apiClient } from "@/lib/api";
+import { JobStatus } from "./job-status";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
@@ -16,7 +17,7 @@ export function FileUpload() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       setFile(e.target.files[0]);
     }
   };
@@ -32,19 +33,10 @@ export function FileUpload() {
     setActiveJobId(null);
 
     try {
-      const tokenResponse = await fetch("http://localhost:3000/upload/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ filename: file.name } as UploadFileRequest),
-      });
-
-      if (!tokenResponse.ok) {
-        throw new Error("Failed to get upload token");
-      }
-
-      const { uploadUrl, blobPath } = await tokenResponse.json();
+      const { uploadUrl, blobPath } = await apiClient.post<{ uploadUrl: string; blobPath: string }>(
+        "/upload/token",
+        { filename: file.name } as UploadFileRequest,
+      );
 
       setStatus("Uploading to storage...");
       const uploadToAzure = await fetch(uploadUrl, {
@@ -61,22 +53,11 @@ export function FileUpload() {
       }
 
       setStatus("Creating job...");
-      const jobResponse = await fetch("http://localhost:3000/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt,
-          inputImagePath: blobPath,
-        }),
+      const job = await apiClient.post<Job>("/jobs", {
+        prompt,
+        inputImagePath: blobPath,
       });
 
-      if (!jobResponse.ok) {
-        throw new Error("Failed to create job");
-      }
-
-      const job = await jobResponse.json();
       setStatus("Job created successfully!");
       setActiveJobId(job.id);
       setFile(null);
@@ -103,8 +84,11 @@ export function FileUpload() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Image File</label>
+            <label htmlFor="image-file" className="text-sm font-medium">
+              Image File
+            </label>
             <Input
+              id="image-file"
               type="file"
               accept="image/*"
               onChange={handleFileChange}
@@ -112,8 +96,11 @@ export function FileUpload() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Processing Prompt</label>
+            <label htmlFor="processing-prompt" className="text-sm font-medium">
+              Processing Prompt
+            </label>
             <Input
+              id="processing-prompt"
               placeholder="e.g. Convert this image to grayscale and resize to 800px"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}

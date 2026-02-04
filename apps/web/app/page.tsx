@@ -1,5 +1,5 @@
 import Image, { type ImageProps } from "next/image";
-import { FileUpload } from "./components/FileUpload";
+import { FileUpload } from "./components/file-upload";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -30,10 +30,16 @@ export default function Home() {
           priority
         />
         <div className="flex gap-4 text-sm text-muted-foreground">
-          <a href="#" className="hover:text-foreground transition-colors">
+          <a
+            href="https://github.com/Mesmon/async-job-queue#readme"
+            className="hover:text-foreground transition-colors"
+          >
             Documentation
           </a>
-          <a href="#" className="hover:text-foreground transition-colors">
+          <a
+            href="https://github.com/Mesmon/async-job-queue"
+            className="hover:text-foreground transition-colors"
+          >
             GitHub
           </a>
         </div>

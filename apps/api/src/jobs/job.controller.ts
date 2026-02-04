@@ -1,14 +1,23 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
-import { createJobRequestSchema } from "@repo/shared";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+} from "@nestjs/common";
+import { type CreateJobRequest, createJobRequestSchema } from "@repo/shared";
 import { z } from "zod";
 import { JobsService } from "./job.service.js";
 
 @Controller("jobs")
 export class JobsController {
-  constructor(private readonly jobsService: JobsService) {}
+  constructor(@Inject(JobsService) private readonly jobsService: JobsService) {}
 
   @Post()
-  async create(@Body() body: unknown) {
+  async create(@Body() body: CreateJobRequest) {
     const parseResult = createJobRequestSchema.safeParse(body);
     if (!parseResult.success) {
       throw new HttpException(z.treeifyError(parseResult.error), HttpStatus.BAD_REQUEST);

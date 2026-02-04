@@ -1,8 +1,8 @@
-"use client";
-
 import type { Job } from "@repo/shared/schemas";
 import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
+import { apiClient } from "@/lib/api";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
@@ -15,11 +15,7 @@ export function JobStatus({ jobId }: { jobId: string }) {
 
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/jobs/${jobId}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch job status");
-        }
-        const data = await res.json();
+        const data = await apiClient.get<Job>(`/jobs/${jobId}`);
         setJob(data);
 
         if (data.status === "COMPLETED" || data.status === "FAILED") {
@@ -116,12 +112,8 @@ export function JobStatus({ jobId }: { jobId: string }) {
         {job.outputImagePath && (
           <div className="pt-2">
             <p className="text-sm font-medium mb-2">Output Preview</p>
-            <div className="rounded-lg overflow-hidden border">
-              <img
-                src={job.outputImagePath}
-                alt="Job Output"
-                className="w-full h-auto object-cover max-h-[400px]"
-              />
+            <div className="rounded-lg overflow-hidden border relative max-h-100">
+              <Image src={job.outputImagePath} alt="Job Output" fill className="object-cover" />
             </div>
           </div>
         )}

@@ -42,6 +42,11 @@
       "bracketSpacing": true
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "assist": {
     "actions": {
       "source": {

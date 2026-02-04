@@ -24,11 +24,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={cn(
-        "min-h-screen bg-background font-sans antialiased",
-        geistSans.variable, 
-        geistMono.variable
-      )}>
+      <body
+        suppressHydrationWarning
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          geistSans.variable,
+          geistMono.variable,
+        )}
+      >
         {children}
       </body>
     </html>
