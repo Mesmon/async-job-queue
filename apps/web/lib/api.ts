@@ -28,6 +28,6 @@ export const apiClient = {
   get: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: "GET" }),
   post: <T>(path: string, body: unknown, options?: RequestInit) =>
     request<T>(path, { ...options, method: "POST", body: JSON.stringify(body) }),
-  put: <T>(path: string, body: unknown, options?: RequestInit) =>
+  put: <T>(path: string, body?: BodyInit, options?: RequestInit) =>
     request<T>(path, { ...options, method: "PUT", body }), // Body might not be JSON for direct cloud uploads
 };
