@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Modern asynchronous job processing",
 };
 
+import { Providers } from "./components/providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,7 +34,7 @@ export default function RootLayout({
           geistMono.variable,
         )}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

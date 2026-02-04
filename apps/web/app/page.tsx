@@ -1,5 +1,5 @@
 import Image, { type ImageProps } from "next/image";
-import { FileUpload } from "./components/file-upload";
+import { GeneratorView } from "./components/generator-view";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -56,7 +56,7 @@ export default function Home() {
           </p>
         </div>
 
-        <FileUpload />
+        <GeneratorView />
 
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <Feature
