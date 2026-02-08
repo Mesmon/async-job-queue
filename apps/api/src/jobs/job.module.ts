@@ -9,6 +9,13 @@ import { JobsService } from "./job.service.js";
     ConfigModule,
     BullModule.registerQueue({
       name: "image-processing",
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 1000,
+        },
+      },
     }),
   ],
   controllers: [JobsController],

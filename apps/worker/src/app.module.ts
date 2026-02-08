@@ -22,6 +22,13 @@ import { JobsProcessor } from "./jobs/jobs.processor.js";
     // Register as a Consumer (Worker)
     BullModule.registerQueue({
       name: "image-processing",
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 1000,
+        },
+      },
     }),
   ],
   providers: [JobsProcessor],

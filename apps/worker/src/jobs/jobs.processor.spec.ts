@@ -62,6 +62,9 @@ describe("JobsProcessor", () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
 
+    // Mock Math.random to be deterministic (success by default)
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+
     // Mock Logger to silence output
     vi.spyOn(Logger.prototype, "log").mockImplementation(() => {});
     vi.spyOn(Logger.prototype, "error").mockImplementation(() => {});
@@ -91,7 +94,7 @@ describe("JobsProcessor", () => {
 
     processor = module.get<JobsProcessor>(JobsProcessor);
 
-    // Default mocks setup for db chaining
+    // Default mocks setup
     vi.mocked(db.update(jobs).set).mockReturnThis();
   });
 
@@ -362,5 +365,35 @@ describe("JobsProcessor", () => {
     const failedUpdate = setCalls.find((args) => args[0].status === JobStatus.enum.FAILED);
     expect(failedUpdate).toBeDefined();
     expect(failedUpdate![0].error).toBe("Unknown error");
+  });
+
+  it("should handle random simulated failure", async () => {
+    const mockJob = { data: { jobId: "job-random-fail" } } as Job<{ jobId: string }>;
+
+    vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([
+      createMockJob({ id: "job-random-fail" }),
+    ]);
+    // biome-ignore lint/suspicious/noExplicitAny: mocking db
+    vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
+
+    // Mock Math.random to trigger failure
+    vi.spyOn(Math, "random").mockReturnValue(0.1);
+
+    vi.clearAllMocks();
+
+    const processPromise = processor.process(mockJob);
+
+    // Handle the promise before advancing timers
+    const expectation = expect(processPromise).rejects.toThrow(
+      "Random simulated failure to demonstrate BullMQ retries",
+    );
+
+    await vi.runAllTimersAsync();
+    await expectation;
+
+    // Verify status was updated to FAILED in the DB
+    const setCalls = vi.mocked(db.update(jobs).set).mock.calls;
+    const failedUpdate = setCalls.find((args) => args[0].status === JobStatus.enum.FAILED);
+    expect(failedUpdate).toBeDefined();
   });
 });

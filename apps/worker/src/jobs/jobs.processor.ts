@@ -81,6 +81,11 @@ export class JobsProcessor extends WorkerHost {
 
       const outputBuffer = await pipeline.png().toBuffer();
 
+      // 4.5 Random failure to demonstrate retries
+      if (this.shouldSimulateFailure()) {
+        throw new Error("Random simulated failure to demonstrate BullMQ retries");
+      }
+
       // 5. Upload Output Image
       const outputFilename = `result-${jobId}.png`;
       await this.uploadToAzure(outputBuffer, outputFilename);
@@ -135,5 +140,9 @@ export class JobsProcessor extends WorkerHost {
       readableStream.on("end", () => resolve(Buffer.concat(chunks)));
       readableStream.on("error", reject);
     });
+  }
+
+  private shouldSimulateFailure(): boolean {
+    return Math.random() < 0.3;
   }
 }

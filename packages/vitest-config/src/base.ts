@@ -6,6 +6,7 @@ export const config: UserConfig = {
       enabled: true,
       provider: "v8",
       reportsDirectory: "coverage",
+      reporter: ["text", "json", "html", "json-summary"],
     },
     environment: "jsdom",
   },
