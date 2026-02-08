@@ -8,6 +8,7 @@ vi.mock("@azure/storage-blob", () => {
   return {
     BlobServiceClient: {
       fromConnectionString: vi.fn().mockReturnValue({
+        setProperties: vi.fn().mockResolvedValue({}),
         getContainerClient: vi.fn().mockReturnValue({
           createIfNotExists: vi.fn(),
           getBlockBlobClient: vi.fn().mockReturnValue({
@@ -51,5 +52,36 @@ describe("UploadService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  describe("generateSasToken", () => {
+    it("should generate a SAS token", async () => {
+      const filename = "test-image.jpg";
+      const result = await service.generateSasToken(filename);
+
+      expect(result).toEqual({
+        uploadUrl: "mock-sas-url",
+        blobPath: expect.stringContaining("test-image.jpg"),
+      });
+
+      // Verify internal calls
+      // 1. Container created
+      // biome-ignore lint/complexity/useLiteralKeys: accessing private property for testing
+      const containerClient = service["blobServiceClient"].getContainerClient("test-container");
+      expect(containerClient.createIfNotExists).toHaveBeenCalled();
+
+      // 2. CORS set
+      // biome-ignore lint/complexity/useLiteralKeys: accessing private property for testing
+      expect(service["blobServiceClient"].setProperties).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cors: expect.arrayContaining([
+            expect.objectContaining({
+              allowedOrigins: "*",
+              allowedMethods: "GET,PUT,POST,OPTIONS",
+            }),
+          ]),
+        }),
+      );
+    });
   });
 });
