@@ -2,10 +2,14 @@
 
 A high-performance, scalable asynchronous job queue for image processing, built with a modern TypeScript monorepo architecture.
 
+[![CI](https://github.com/Mesmon/async-job-queue/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Mesmon/async-job-queue/actions/workflows/ci.yml)
 ![Coverage API](https://img.shields.io/badge/Coverage%20(API)-100%25-brightgreen)
 ![Coverage Worker](https://img.shields.io/badge/Coverage%20(Worker)-100%25-brightgreen)
 ![Linting](https://img.shields.io/badge/Linting-Biome-blue)
 ![Types](https://img.shields.io/badge/TypeScript-Strict-blue)
+![Node](https://img.shields.io/badge/Node-%5E18.0.0-green)
+![pnpm](https://img.shields.io/badge/pnpm-%5E10.0.0-orange)
+![License](https://img.shields.io/badge/License-UNLICENSED-gray)
 
 ## 🚀 Tech Stack
 
