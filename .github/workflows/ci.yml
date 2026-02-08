@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build, Test & Update Badges
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Type Checks
+        run: pnpm turbo check-types
+
+      - name: Run Linter
+        run: pnpm turbo lint
+
+      - name: Run Tests & Generate Coverage
+        run: pnpm turbo test
+
+      - name: Update Badges
+        run: pnpm run update-badges
+
+      - name: Commit & Push changes
+        if: github.event_name == 'push' # Only commit on push to main, not on PRs (unless you want to push to the PR branch)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update coverage badges [skip ci]"
+          file_pattern: README.md
