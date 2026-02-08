@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "./components/providers";
+import { SiteFooter } from "./components/site-footer";
+import { SiteHeader } from "./components/site-header";
 
 export default function RootLayout({
   children,
@@ -29,12 +31,16 @@ export default function RootLayout({
       <body
         suppressHydrationWarning
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen bg-background font-sans antialiased flex flex-col",
           geistSans.variable,
           geistMono.variable,
         )}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <SiteHeader />
+          <main className="flex-grow flex flex-col items-center">{children}</main>
+          <SiteFooter />
+        </Providers>
       </body>
     </html>
   );
