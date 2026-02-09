@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { AppController } from "./app.controller.js";
 import { AppService } from "./app.service.js";
 import { JobsModule } from "./jobs/job.module.js";
+import { StorageModule } from "./storage/storage.module.js";
 import { UploadModule } from "./upload/upload.module.js";
 
 @Module({
@@ -21,6 +22,7 @@ import { UploadModule } from "./upload/upload.module.js";
       }),
       inject: [ConfigService],
     }),
+    StorageModule,
     UploadModule,
     JobsModule,
   ],

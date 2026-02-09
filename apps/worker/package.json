@@ -19,7 +19,7 @@
     "check": "biome check --write ."
   },
   "dependencies": {
-    "@azure/storage-blob": "^12.30.0",
+    "@repo/storage": "workspace:*",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.11",
     "@nestjs/config": "^4.0.2",

@@ -1,27 +1,33 @@
-import { BlobServiceClient } from "@azure/storage-blob";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Inject, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { db, eq, jobs } from "@repo/database";
 import { JobStatus } from "@repo/shared";
+import type { StorageProvider } from "@repo/storage";
 import type { Job } from "bullmq";
 import sharp from "sharp";
+import { STORAGE_PROVIDER } from "../storage/storage.module.js";
 
 @Processor("image-processing")
 export class JobsProcessor extends WorkerHost {
   private readonly logger = new Logger(JobsProcessor.name, { timestamp: true });
-  private blobServiceClient: BlobServiceClient;
   private inputContainer: string;
   private outputContainer: string;
 
-  constructor(@Inject(ConfigService) private config: ConfigService) {
+  constructor(
+    @Inject(ConfigService) private config: ConfigService,
+    @Inject(STORAGE_PROVIDER) private storage: StorageProvider,
+  ) {
     super();
-    // Initialize Azure
-    this.blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.config.getOrThrow("AZURE_STORAGE_CONNECTION_STRING"),
-    );
-    this.inputContainer = this.config.getOrThrow("AZURE_INPUT_CONTAINER");
-    this.outputContainer = this.config.getOrThrow("AZURE_OUTPUT_CONTAINER");
+    const provider = this.config.get<string>("STORAGE_PROVIDER") || "azure";
+    this.inputContainer =
+      provider === "azure"
+        ? this.config.getOrThrow("AZURE_INPUT_CONTAINER")
+        : this.config.getOrThrow("AWS_INPUT_BUCKET");
+    this.outputContainer =
+      provider === "azure"
+        ? this.config.getOrThrow("AZURE_OUTPUT_CONTAINER")
+        : this.config.getOrThrow("AWS_OUTPUT_BUCKET");
   }
 
   async process(job: Job<{ jobId: string }>): Promise<void> {
@@ -39,7 +45,7 @@ export class JobsProcessor extends WorkerHost {
       await db.update(jobs).set({ status: JobStatus.enum.PROCESSING }).where(eq(jobs.id, jobId));
 
       // 3. Download Input Image (User upload)
-      const inputBuffer = await this.downloadFromAzure(jobRecord.inputPath);
+      const inputBuffer = await this.downloadImage(jobRecord.inputPath);
 
       // 4. Process Image with Sharp
       if (!jobRecord.processingOptions) {
@@ -63,6 +69,7 @@ export class JobsProcessor extends WorkerHost {
           default:
             throw new Error(`Unknown processing type: ${filterType satisfies never}`);
         }
+
         if (watermarkText) {
           const svgWatermark = `<svg width="800" height="600">
             <text x="10" y="50" font-size="48" fill="white" opacity="0.5">${watermarkText}</text>
@@ -76,9 +83,7 @@ export class JobsProcessor extends WorkerHost {
         }
       }
 
-      this.logger.log(`[Worker] Simulating heavy CPU work for Job ${jobId} for 5 seconds...`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
+      this.logger.log(`[Worker] Processing image for Job ${jobId}...`);
       const outputBuffer = await pipeline.png().toBuffer();
 
       // 4.5 Random failure to demonstrate retries
@@ -88,7 +93,7 @@ export class JobsProcessor extends WorkerHost {
 
       // 5. Upload Output Image
       const outputFilename = `result-${jobId}.png`;
-      await this.uploadToAzure(outputBuffer, outputFilename);
+      await this.uploadImage(outputBuffer, outputFilename);
 
       // 6. Update Status -> COMPLETED
       await db
@@ -103,11 +108,12 @@ export class JobsProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(`[Worker] Job ${jobId} Failed:`, error);
 
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       await db
         .update(jobs)
         .set({
           status: JobStatus.enum.FAILED,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: errorMessage,
         })
         .where(eq(jobs.id, jobId));
 
@@ -117,29 +123,12 @@ export class JobsProcessor extends WorkerHost {
 
   // --- Helpers ---
 
-  private async downloadFromAzure(blobName: string): Promise<Buffer> {
-    const containerClient = this.blobServiceClient.getContainerClient(this.inputContainer);
-    const blobClient = containerClient.getBlockBlobClient(blobName);
-    const downloadBlockBlobResponse = await blobClient.download(0);
-    return await this.streamToBuffer(downloadBlockBlobResponse.readableStreamBody!);
+  private async downloadImage(blobName: string): Promise<Buffer> {
+    return this.storage.download(blobName, { bucket: this.inputContainer });
   }
 
-  private async uploadToAzure(buffer: Buffer, blobName: string) {
-    const containerClient = this.blobServiceClient.getContainerClient(this.outputContainer);
-    await containerClient.createIfNotExists();
-    const blobClient = containerClient.getBlockBlobClient(blobName);
-    await blobClient.upload(buffer, buffer.length);
-  }
-
-  private async streamToBuffer(readableStream: NodeJS.ReadableStream): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      readableStream.on("data", (data) =>
-        chunks.push(data instanceof Buffer ? data : Buffer.from(data)),
-      );
-      readableStream.on("end", () => resolve(Buffer.concat(chunks)));
-      readableStream.on("error", reject);
-    });
+  private async uploadImage(buffer: Buffer, blobName: string) {
+    await this.storage.upload(blobName, buffer, { bucket: this.outputContainer });
   }
 
   private shouldSimulateFailure(): boolean {

@@ -15,7 +15,7 @@ const getCoverage = (appPath: string): string => {
     }
     const summary = JSON.parse(fs.readFileSync(summaryPath, "utf-8"));
     return Math.floor(summary.total.lines.pct).toString();
-  } catch (e) {
+  } catch (_) {
     return "0";
   }
 };
