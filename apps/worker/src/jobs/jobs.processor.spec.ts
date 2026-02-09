@@ -5,40 +5,14 @@ import { db, jobs } from "@repo/database";
 import { JobStatus } from "@repo/shared";
 import type { Job } from "bullmq";
 import sharp from "sharp";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { STORAGE_PROVIDER } from "../storage/storage.module.js";
 import { JobsProcessor } from "./jobs.processor.js";
 
 const { databaseMock, createMockJob } = await vi.hoisted(() => import("@repo/database/testing"));
 
 // Mock @repo/database using the centralized testing mock
 vi.mock("@repo/database", () => databaseMock);
-
-// Mock Azure SDK
-vi.mock("@azure/storage-blob", () => ({
-  BlobServiceClient: {
-    fromConnectionString: vi.fn().mockReturnValue({
-      getContainerClient: vi.fn().mockReturnValue({
-        createIfNotExists: vi.fn(),
-        getBlockBlobClient: vi.fn().mockReturnValue({
-          download: vi.fn().mockResolvedValue({
-            readableStreamBody: {
-              on: vi.fn((event, callback) => {
-                if (event === "data") {
-                  callback(Buffer.from("mock-data"));
-                }
-                if (event === "end") {
-                  callback();
-                }
-                return this;
-              }),
-            },
-          }),
-          upload: vi.fn(),
-        }),
-      }),
-    }),
-  },
-}));
 
 // Mock Sharp
 vi.mock("sharp", () => {
@@ -57,9 +31,9 @@ vi.mock("sharp", () => {
 
 describe("JobsProcessor", () => {
   let processor: JobsProcessor;
+  let storageProviderMock: { download: ReturnType<typeof vi.fn>; upload: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    vi.useFakeTimers();
     vi.clearAllMocks();
 
     // Mock Math.random to be deterministic (success by default)
@@ -69,12 +43,23 @@ describe("JobsProcessor", () => {
     vi.spyOn(Logger.prototype, "log").mockImplementation(() => {});
     vi.spyOn(Logger.prototype, "error").mockImplementation(() => {});
 
+    storageProviderMock = {
+      download: vi.fn().mockResolvedValue(Buffer.from("mock-data")),
+      upload: vi.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         JobsProcessor,
         {
           provide: ConfigService,
           useValue: {
+            get: vi.fn((key) => {
+              if (key === "STORAGE_PROVIDER") {
+                return "azure";
+              }
+              return null;
+            }),
             getOrThrow: vi.fn((key) => {
               if (key === "AZURE_STORAGE_CONNECTION_STRING") {
                 return "UseDevelopmentStorage=true";
@@ -89,6 +74,10 @@ describe("JobsProcessor", () => {
             }),
           },
         },
+        {
+          provide: STORAGE_PROVIDER,
+          useValue: storageProviderMock,
+        },
       ],
     }).compile();
 
@@ -96,10 +85,6 @@ describe("JobsProcessor", () => {
 
     // Default mocks setup
     vi.mocked(db.update(jobs).set).mockReturnThis();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it("should be defined", () => {
@@ -113,7 +98,7 @@ describe("JobsProcessor", () => {
 
     // Mock DB select response
     vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([
-      createMockJob({ id: "test-job-id" }),
+      createMockJob({ id: "test-job-id", inputPath: "input.jpg" }),
     ]);
 
     // Mock Update Where to return something
@@ -123,10 +108,6 @@ describe("JobsProcessor", () => {
     vi.clearAllMocks();
 
     const processPromise = processor.process(mockJob);
-
-    // Fast forward time to skip the 5s delay
-    await vi.advanceTimersByTimeAsync(5000);
-
     await processPromise;
 
     // Verify DB update calls
@@ -135,8 +116,98 @@ describe("JobsProcessor", () => {
     // 2. Status COMPLETED
     expect(db.update).toHaveBeenCalledTimes(2);
 
+    // Verify Storage calls
+    expect(storageProviderMock.download).toHaveBeenCalledWith("input.jpg", {
+      bucket: "input-container",
+    });
+    expect(storageProviderMock.upload).toHaveBeenCalledWith(
+      expect.stringContaining("result-test-job-id"),
+      expect.any(Buffer),
+      { bucket: "output-container" },
+    );
+
     // Verify Sharp called
     expect(sharp).toHaveBeenCalled();
+  });
+
+  it("should process a job successfully with AWS", async () => {
+    const awsModule: TestingModule = await Test.createTestingModule({
+      providers: [
+        JobsProcessor,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: vi.fn((key) => (key === "STORAGE_PROVIDER" ? "aws" : null)),
+            getOrThrow: vi.fn((key) => {
+              if (key === "AWS_INPUT_BUCKET") {
+                return "aws-in";
+              }
+              if (key === "AWS_OUTPUT_BUCKET") {
+                return "aws-out";
+              }
+              return "mock";
+            }),
+          },
+        },
+        { provide: STORAGE_PROVIDER, useValue: storageProviderMock },
+      ],
+    }).compile();
+    const awsProcessor = awsModule.get<JobsProcessor>(JobsProcessor);
+
+    const mockJob = { data: { jobId: "aws-job" } } as Job<{ jobId: string }>;
+    vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([
+      createMockJob({ id: "aws-job", inputPath: "in.jpg" }),
+    ]);
+    // biome-ignore lint/suspicious/noExplicitAny: mocking db
+    vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
+
+    const processPromise = awsProcessor.process(mockJob);
+    await processPromise;
+
+    expect(storageProviderMock.download).toHaveBeenCalledWith("in.jpg", { bucket: "aws-in" });
+    expect(storageProviderMock.upload).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Buffer),
+      {
+        bucket: "aws-out",
+      },
+    );
+  });
+
+  it("should use azure as default provider if STORAGE_PROVIDER is not set", async () => {
+    const defaultModule: TestingModule = await Test.createTestingModule({
+      providers: [
+        JobsProcessor,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: vi.fn(() => null),
+            getOrThrow: vi.fn((key) => {
+              if (key === "AZURE_INPUT_CONTAINER") {
+                return "azure-in";
+              }
+              if (key === "AZURE_OUTPUT_CONTAINER") {
+                return "azure-out";
+              }
+              return "mock";
+            }),
+          },
+        },
+        { provide: STORAGE_PROVIDER, useValue: storageProviderMock },
+      ],
+    }).compile();
+    const defaultProcessor = defaultModule.get<JobsProcessor>(JobsProcessor);
+
+    const mockJob = { data: { jobId: "azure-default-job" } } as Job<{ jobId: string }>;
+    vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([
+      createMockJob({ id: "azure-default-job", inputPath: "in.jpg" }),
+    ]);
+    // biome-ignore lint/suspicious/noExplicitAny: mocking db
+    vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
+
+    await defaultProcessor.process(mockJob);
+
+    expect(storageProviderMock.download).toHaveBeenCalledWith("in.jpg", { bucket: "azure-in" });
   });
 
   describe("Processing Options", () => {
@@ -151,7 +222,6 @@ describe("JobsProcessor", () => {
       vi.clearAllMocks();
 
       const processPromise = processor.process(mockJob);
-      await vi.advanceTimersByTimeAsync(5000);
       await processPromise;
 
       const sharpInstance = sharp(Buffer.from("mock"));
@@ -166,10 +236,8 @@ describe("JobsProcessor", () => {
       ]);
       // biome-ignore lint/suspicious/noExplicitAny: mocking db
       vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-      vi.clearAllMocks();
 
       const processPromise = processor.process(mockJob);
-      await vi.advanceTimersByTimeAsync(5000);
       await processPromise;
 
       const sharpInstance = sharp(Buffer.from("mock"));
@@ -184,10 +252,8 @@ describe("JobsProcessor", () => {
       ]);
       // biome-ignore lint/suspicious/noExplicitAny: mocking db
       vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-      vi.clearAllMocks();
 
       const processPromise = processor.process(mockJob);
-      await vi.advanceTimersByTimeAsync(5000);
       await processPromise;
 
       const sharpInstance = sharp(Buffer.from("mock"));
@@ -205,10 +271,8 @@ describe("JobsProcessor", () => {
       ]);
       // biome-ignore lint/suspicious/noExplicitAny: mocking db
       vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-      vi.clearAllMocks();
 
       const processPromise = processor.process(mockJob);
-      await vi.advanceTimersByTimeAsync(5000);
       await processPromise;
 
       const sharpInstance = sharp(Buffer.from("mock"));
@@ -230,9 +294,19 @@ describe("JobsProcessor", () => {
       ]);
       // biome-ignore lint/suspicious/noExplicitAny: mocking db
       vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-      vi.clearAllMocks();
 
       await expect(processor.process(mockJob)).rejects.toThrow("Processing options not found");
+    });
+
+    it("should throw error if job record is not found", async () => {
+      const mockJob = { data: { jobId: "non-existent" } } as Job<{ jobId: string }>;
+
+      vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([]);
+
+      // biome-ignore lint/suspicious/noExplicitAny: mocking db
+      vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
+
+      await expect(processor.process(mockJob)).rejects.toThrow("Job record not found");
     });
 
     it("should throw error if processing type is unknown", async () => {
@@ -245,104 +319,30 @@ describe("JobsProcessor", () => {
           processingOptions: { type: "UNKNOWN" as any },
         }),
       ]);
+
       // biome-ignore lint/suspicious/noExplicitAny: mocking db
       vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-      vi.clearAllMocks();
 
       await expect(processor.process(mockJob)).rejects.toThrow("Unknown processing type: UNKNOWN");
-    });
+    }); // ... (other processing options are similar, logic unchanged)
   });
 
-  describe("Stream Helpers", () => {
-    it("should handle stream errors in streamToBuffer", async () => {
-      const mockJob = { data: { jobId: "job-stream-error" } } as Job<{ jobId: string }>;
+  describe("Storage Errors", () => {
+    it("should handle download error", async () => {
+      const mockJob = { data: { jobId: "job-download-error" } } as Job<{ jobId: string }>;
 
       vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([
-        createMockJob({ id: "job-stream-error" }),
+        createMockJob({ id: "job-download-error" }),
       ]);
       // biome-ignore lint/suspicious/noExplicitAny: mocking db
       vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
 
-      // Mock stream error
-      vi.mocked(
-        // biome-ignore lint/suspicious/noExplicitAny: internal azure mock
-        (processor as any).blobServiceClient.getContainerClient("").getBlockBlobClient("").download,
-      ).mockResolvedValueOnce({
-        readableStreamBody: {
-          on: vi.fn((event, callback) => {
-            if (event === "error") {
-              callback(new Error("Stream failure"));
-            }
-            return this;
-          }),
-        },
-        // biome-ignore lint/suspicious/noExplicitAny: internal azure mock
-      } as any);
+      storageProviderMock.download.mockRejectedValueOnce(new Error("Download failure"));
 
       vi.clearAllMocks();
 
-      await expect(processor.process(mockJob)).rejects.toThrow("Stream failure");
+      await expect(processor.process(mockJob)).rejects.toThrow("Download failure");
     });
-
-    it("should handle string data in streamToBuffer", async () => {
-      const mockJob = { data: { jobId: "job-string-stream" } } as Job<{ jobId: string }>;
-
-      vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([
-        createMockJob({ id: "job-string-stream" }),
-      ]);
-      // biome-ignore lint/suspicious/noExplicitAny: mocking db
-      vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-
-      // Mock stream with string data
-      vi.mocked(
-        // biome-ignore lint/suspicious/noExplicitAny: internal azure mock
-        (processor as any).blobServiceClient.getContainerClient("").getBlockBlobClient("").download,
-      ).mockResolvedValueOnce({
-        readableStreamBody: {
-          on: vi.fn((event, callback) => {
-            if (event === "data") {
-              callback("string-data");
-            }
-            if (event === "end") {
-              callback();
-            }
-            return this;
-          }),
-        },
-        // biome-ignore lint/suspicious/noExplicitAny: internal azure mock
-      } as any);
-
-      vi.clearAllMocks();
-
-      const processPromise = processor.process(mockJob);
-      await vi.advanceTimersByTimeAsync(5000);
-      await processPromise;
-
-      expect(db.update).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  it("should handle errors and update job status to FAILED", async () => {
-    const mockJob = {
-      data: { jobId: "fail-job-id" },
-    } as Job<{ jobId: string }>;
-
-    // Mock DB select to return empty, causing "Job record not found"
-    vi.mocked(db.select().from(jobs).where).mockResolvedValueOnce([]);
-
-    // biome-ignore lint/suspicious/noExplicitAny: mocking db response
-    vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-
-    vi.clearAllMocks();
-
-    await expect(processor.process(mockJob)).rejects.toThrow("Job record not found");
-
-    // Verify DB update status FAILED
-    expect(db.update).toHaveBeenCalled();
-    const setCalls = vi.mocked(db.update(jobs).set).mock.calls;
-    const failedUpdate = setCalls.find((args) => args[0].status === JobStatus.enum.FAILED);
-    expect(failedUpdate).toBeDefined();
-    expect(failedUpdate![0].error).toBe("Job record not found");
   });
 
   it("should handle non-Error objects thrown in process", async () => {
@@ -355,8 +355,6 @@ describe("JobsProcessor", () => {
 
     // biome-ignore lint/suspicious/noExplicitAny: mocking db response
     vi.mocked(db.update(jobs).set({}).where).mockResolvedValue({} as any);
-
-    vi.clearAllMocks();
 
     await expect(processor.process(mockJob)).rejects.toBe("Literal string error");
 
@@ -383,13 +381,10 @@ describe("JobsProcessor", () => {
 
     const processPromise = processor.process(mockJob);
 
-    // Handle the promise before advancing timers
-    const expectation = expect(processPromise).rejects.toThrow(
+    // Handle the promise
+    await expect(processPromise).rejects.toThrow(
       "Random simulated failure to demonstrate BullMQ retries",
     );
-
-    await vi.runAllTimersAsync();
-    await expectation;
 
     // Verify status was updated to FAILED in the DB
     const setCalls = vi.mocked(db.update(jobs).set).mock.calls;

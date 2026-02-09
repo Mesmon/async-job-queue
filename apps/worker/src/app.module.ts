@@ -2,6 +2,7 @@ import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JobsProcessor } from "./jobs/jobs.processor.js";
+import { StorageModule } from "./storage/storage.module.js";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { JobsProcessor } from "./jobs/jobs.processor.js";
         },
       },
     }),
+    StorageModule,
   ],
   providers: [JobsProcessor],
 })

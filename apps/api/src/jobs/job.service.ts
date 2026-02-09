@@ -1,24 +1,26 @@
-import { BlobSASPermissions, BlobServiceClient } from "@azure/storage-blob";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { db, eq, jobs } from "@repo/database";
 import { CreateJobRequest, JobStatus } from "@repo/shared";
+import { StorageProvider } from "@repo/storage";
 import { Queue } from "bullmq";
-import { addMinutes } from "date-fns";
+import { STORAGE_PROVIDER } from "../storage/storage.module.js";
 
 @Injectable()
 export class JobsService {
-  private blobServiceClient: BlobServiceClient;
   private outputContainerName: string;
 
   constructor(
     @InjectQueue("image-processing") private jobQueue: Queue,
     @Inject(ConfigService) private config: ConfigService,
+    @Inject(STORAGE_PROVIDER) private storage: StorageProvider,
   ) {
-    const connectionString = this.config.getOrThrow<string>("AZURE_STORAGE_CONNECTION_STRING");
-    this.outputContainerName = this.config.getOrThrow<string>("AZURE_OUTPUT_CONTAINER");
-    this.blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+    const provider = this.config.get<string>("STORAGE_PROVIDER") || "azure";
+    this.outputContainerName =
+      provider === "azure"
+        ? this.config.getOrThrow<string>("AZURE_OUTPUT_CONTAINER")
+        : this.config.getOrThrow<string>("AWS_OUTPUT_BUCKET");
   }
 
   async createJob(dto: CreateJobRequest) {
@@ -47,13 +49,9 @@ export class JobsService {
     }
 
     if (job.outputPath) {
-      const containerClient = this.blobServiceClient.getContainerClient(this.outputContainerName);
-      const blobClient = containerClient.getBlockBlobClient(job.outputPath);
-
-      const sasToken = await blobClient.generateSasUrl({
-        permissions: BlobSASPermissions.parse("r"),
-        startsOn: new Date(),
-        expiresOn: addMinutes(new Date(), 60),
+      const sasToken = await this.storage.generateDownloadUrl(job.outputPath, {
+        expiresIn: 3600, // 60 minutes
+        bucket: this.outputContainerName,
       });
 
       job.outputPath = sasToken;

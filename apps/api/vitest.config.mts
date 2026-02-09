@@ -23,7 +23,7 @@ export default mergeConfig(
       },
       server: {
         deps: {
-          inline: ["@repo/shared", "@repo/database"],
+          inline: ["@repo/shared", "@repo/database", "@repo/storage"],
         },
       },
     },
